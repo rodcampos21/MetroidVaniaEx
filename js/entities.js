@@ -210,7 +210,7 @@ class Player {
   doAttack() {
     const box = this.attackBox();
     for (const e of G.enemies) {
-      if (e.dead || this.hitSet.has(e) || e instanceof Shockwave || !overlaps(box, e)) continue;
+      if (e.dead || e.state === 'dead' || this.hitSet.has(e) || e instanceof Shockwave || !overlaps(box, e)) continue;
       this.hitSet.add(e);
       e.hurt(1, this.facing);
       if (this.atkKind === 'up' && !e.isBoss && !e.isNote) e.vy = -160;

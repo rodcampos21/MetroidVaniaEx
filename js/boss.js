@@ -1,5 +1,5 @@
 // =============================================================
-//  CHEFE: O GUITARRISTA HARDCORE (Galeria Submersa)
+//  CHEFE: JORGE O PECADOR — o Guitarrista Hardcore (Galeria Submersa)
 //  - Guitarrada: anda até o herói, ergue a guitarra e esmaga o chão (KERRANG!)
 //  - Riff: toca um riff e dispara notas musicais que perseguem o herói
 //  - Fase 2 (metade da vida): mais rápido e mais notas
@@ -16,10 +16,12 @@ const BOSS = {
 };
 
 // sequências: [quadro, duração] — a guitarrada e o riff
+// morte: cambaleia → desaba → ajoelha → cai → de bruços → final (o corpo fica no chão)
+const DEATH_SEQ = [['death4', 0.4], ['death0', 0.4], ['death5', 0.5], ['death1', 0.3], ['death6', 0.25], ['death2', 0.45], ['death3', 99]];
 const SMASH_SEQ = [['smash0', 0.5], ['smash1', 0.13], ['smash2', 0.38], ['smash3', 0.22], ['smash4', 0.34], ['smash5', 0.26]];
 
 class GuitaristBoss extends Enemy {
-  constructor(x, y) {
+  constructor(x, y, corpse) {
     super(x, y - (BOSS.H - TILE), BOSS.W, BOSS.H, BOSS.HP);
     this.maxHp = BOSS.HP;
     this.dir = -1; this.color = '#3a2a2e';
@@ -30,13 +32,14 @@ class GuitaristBoss extends Enemy {
     this.phase2 = false; this.lag = 1;        // barra de vida (rastro do dano)
     this.volley = 0; this.fired = false; this.boom = 0;
     this.isBoss = true;
+    if (corpse) { this.state = 'dead'; this.frame = 'death3'; this.hp = 0; }
   }
   set(state) { this.state = state; this.st = 0; this.fired = false; }
 
   start() {                                   // o herói entrou na arena
     this.set('intro');
     G.bossBar = this;
-    G.bossTitle = { t: 3.2 };
+    G.bossTitle = { t: 3.2 }; G.banner = null;
     closeBossGate(true);
   }
 
@@ -60,7 +63,10 @@ class GuitaristBoss extends Enemy {
     if (!this.phase2 && this.hp <= this.maxHp / 2) {           // fúria!
       this.phase2 = true; this.seq = null; this.set('rage');
     }
-    if (this.hp <= 0) { this.hp = 0; this.set('dying'); G.shake = 0.6; }
+    if (this.hp <= 0) {
+      this.hp = 0; this.set('dying'); this.play(DEATH_SEQ); G.shake = 0.6;
+      for (const e of G.enemies) if (e instanceof SonicNote || e instanceof Shockwave) e.pop ? e.pop() : (e.dead = true);
+    }
   }
 
   play(seq) { this.seq = seq; this.si = 0; this.st = 0; this.frame = seq[0][0]; }
@@ -124,11 +130,21 @@ class GuitaristBoss extends Enemy {
         if (this.stepSeq(dt)) { this.smashCd = this.phase2 ? 0.6 : 1.1; this.choose(adx, true); }
         break;
       case 'riff': this.updateRiff(dt, adx); break;
-      case 'dying':
-        this.frame = 'riff6';
-        if (Math.random() < 0.5) spawnParticles(this.x + Math.random() * this.w, this.y + Math.random() * this.h, 3, Math.random() < 0.5 ? '#ff6a30' : '#7a1010', { speed: 70, life: 0.6 });
-        if (Math.floor(this.st * 6) !== Math.floor((this.st - dt) * 6)) G.shake = 0.25;
-        if (this.st > 2.6) this.defeat();
+      case 'dying': {
+        const before = this.frame;
+        this.stepSeq(dt);
+        this.dt = (this.dt || 0) + dt;
+        if (this.dt < 1.3 && Math.random() < 0.5) spawnParticles(this.x + Math.random() * this.w, this.y + Math.random() * this.h, 3, Math.random() < 0.5 ? '#ff6a30' : '#7a1010', { speed: 70, life: 0.6 });
+        if (this.frame !== before) {
+          if (this.frame === 'death5' || this.frame === 'death6') G.shake = 0.35;                 // joelhos / corpo batendo no chão
+          if (this.frame === 'death6') spawnParticles(this.x + this.w / 2 + this.dir * 10, this.y + this.h - 2, 30, '#4a3a3a', { angle: -Math.PI / 2, spread: 2.6, speed: 110, grav: 400, size: 3, life: 0.8 });
+          if (this.frame === 'death1') spawnParticles(this.x + this.w / 2 + this.dir * 14, this.y + this.h - 4, 18, '#8a0a0a', { speed: 60, grav: 300, size: 2.5, life: 0.7 });
+        }
+        if (this.frame === 'death3' && !this.won) { this.won = true; this.defeat(); }
+        break;
+      }
+      case 'dead':
+        this.frame = 'death3';
         break;
     }
 
@@ -192,17 +208,15 @@ class GuitaristBoss extends Enemy {
   }
 
   defeat() {
-    this.dead = true;
+    this.state = 'dead';
     G.data.bosses = G.data.bosses || {};
     G.data.bosses.guitarist = true;
     writeSave();
     G.bossBar = null;
     closeBossGate(false);
     for (const e of G.enemies) if (e instanceof SonicNote || e instanceof Shockwave) e.dead = true;
-    spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 60, '#ff5a30', { speed: 200, grav: 300, size: 3, life: 1.2 });
-    spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 40, '#2a2226', { speed: 150, grav: 400, size: 3, life: 1.2 });
-    G.shake = 0.7;
-    showBanner('Chefe derrotado', 'O Guitarrista Hardcore foi silenciado. O portão se abre... e algo brilha no alto da galeria.', '#ff6a3a');
+    G.shake = 0.3;
+    showBanner('Chefe derrotado', 'Jorge, o Pecador, tocou seu último acorde. O portão se abre... e algo brilha no alto da galeria.', '#ff6a3a');
     G.banner.t = 6;
   }
 }
@@ -294,11 +308,11 @@ function drawBoss(e) {
   shadowAt(cx, fy, 60);
   ctx.save();
   let ox = 0;
-  if (e.state === 'dying') { ox = (Math.random() - 0.5) * 6; ctx.globalAlpha = Math.max(0, 1 - Math.max(0, e.st - 1.6) / 1); }
+  if (e.state === 'dying' && e.frame === 'death4') ox = (Math.random() - 0.5) * 6;
   if (e.state === 'smash' && e.frame === 'smash0') ox = (Math.random() - 0.5) * 2;      // treme antes do golpe
   ctx.translate(cx + ox, 0);
   if (e.dir < 0) ctx.scale(-1, 1);
-  ctx.drawImage(bossImgFor(e.flash > 0 || (e.state === 'dying' && Math.floor(e.st * 12) % 2)), x, y, w, h, -Math.round(ax), fy - Math.round(ay), w, h);
+  ctx.drawImage(bossImgFor(e.flash > 0 || (e.state === 'dying' && (e.dt || 0) < 1.0 && Math.floor((e.dt || 0) * 12) % 2)), x, y, w, h, -Math.round(ax), fy - Math.round(ay), w, h);
   ctx.restore();
   // balão "KERRANG!" (desenhado à parte para nunca ficar espelhado)
   if (e.boom > 0 && kerrangImg.complete) {
@@ -373,22 +387,37 @@ function drawGate() {
 }
 
 // ================= interface do chefe =================
+const bossPortrait = new Image(); bossPortrait.src = 'assets/boss_portrait.png?v=' + ASSET_V;
+const bossIcon = new Image(); bossIcon.src = 'assets/boss_icon.png?v=' + ASSET_V;
+const BOSS_NAME = 'JORGE O PECADOR';
 function drawBossUI() {
   const b = G.bossBar;
-  if (G.bossTitle && G.bossTitle.t > 0) {
+  if (G.bossTitle && G.bossTitle.t > 0) {                 // apresentação com o retrato
     G.bossTitle.t -= 1 / 60;
-    const t = 3.2 - G.bossTitle.t, a = Math.min(1, t * 2, G.bossTitle.t * 1.5);
-    ctx.save(); ctx.globalAlpha = a;
-    const g = ctx.createLinearGradient(0, 0, CW, 0);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, 'rgba(10,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, CH * 0.36, CW, 150);
+    const T = 3.2, t = T - G.bossTitle.t, a = Math.min(1, t * 2.5, G.bossTitle.t * 1.6);
+    ctx.save();
+    ctx.globalAlpha = a * 0.7; ctx.fillStyle = '#0a0004'; ctx.fillRect(0, 0, CW, CH);
+    ctx.globalAlpha = a;
+    if (bossPortrait.complete) {
+      const s = 0.82 + 0.06 * Math.min(1, t / 0.5) + t * 0.01;
+      const w = bossPortrait.width * s, h = bossPortrait.height * s;
+      // brilho vermelho atrás
+      const g = ctx.createRadialGradient(CW / 2, CH / 2 - 20, 40, CW / 2, CH / 2 - 20, w * 0.75);
+      g.addColorStop(0, 'rgba(180,20,30,0.45)'); g.addColorStop(1, 'rgba(180,20,30,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(bossPortrait, Math.round(CW / 2 - w / 2), Math.round(CH / 2 - h / 2 - 34), Math.round(w), Math.round(h));
+      ctx.imageSmoothingEnabled = false;
+      text('O Guitarrista Hardcore', CW / 2, CH / 2 + h / 2 - 22, { size: 30, font: FONT_T, weight: 800, align: 'center', alpha: a, color: '#c03a2a', spacing: 3 });
+    }
     ctx.restore();
-    text('O GUITARRISTA HARDCORE', CW / 2, CH * 0.36 + 34, { size: 58, font: FONT_T, weight: 800, align: 'center', alpha: a, color: '#e8d0b8', spacing: 4 });
-    text('Cavaleiro Negro do Riff', CW / 2, CH * 0.36 + 102, { size: 26, align: 'center', alpha: a, color: '#c04030', weight: 700 });
   }
   if (!b) return;
-  const W = 600, x = CW / 2 - W / 2, y = 30;
+  const W = 600, x = CW / 2 - W / 2 + 26, y = 30;
   frameBox(x, y, W, 26, 0.9);
+  // ícone do chefe
+  frameBox(x - 62, y - 14, 54, 54, 0.95);
+  if (bossIcon.complete) { ctx.imageSmoothingEnabled = true; ctx.drawImage(bossIcon, x - 59, y - 11, 48, 48); ctx.imageSmoothingEnabled = false; }
   const len = W - 12;
   ctx.fillStyle = '#2a0808'; ctx.fillRect(x + 6, y + 6, len, 14);
   ctx.fillStyle = 'rgba(255,220,190,0.8)'; ctx.fillRect(x + 6, y + 6, Math.round(len * b.lag), 14);
@@ -397,5 +426,5 @@ function drawBossUI() {
   ctx.fillStyle = '#d02a20'; ctx.fillRect(x + 6, y + 6, Math.round(len * f), 7);
   ctx.fillStyle = '#ff7a50'; ctx.fillRect(x + 6, y + 6, Math.round(len * f), 2);
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x + 6 + len / 2, y + 6, 2, 14);   // marca da fase 2
-  text('O GUITARRISTA HARDCORE', CW / 2, y + 32, { size: 20, font: FONT_T, weight: 800, align: 'center', color: '#e0c8b0', spacing: 3 });
+  text(BOSS_NAME, x + W / 2, y + 32, { size: 20, font: FONT_T, weight: 800, align: 'center', color: '#e0c8b0', spacing: 3 });
 }

@@ -13,7 +13,7 @@
 //   D  item: Salto Etéreo     H  item: Rolamento
 //   +  item: Fragmento de Vida E  fim da demo (portal)
 //   G  item: Garras (escalar paredes)
-//   K  chefe: O Guitarrista Hardcore   |  portão da arena (fecha na luta)
+//   K  chefe: Jorge O Pecador (o Guitarrista Hardcore)   |  portão da arena (fecha na luta)
 // =============================================================
 
 const ROOMS = {

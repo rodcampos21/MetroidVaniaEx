@@ -42,7 +42,7 @@ function enterRoom(id, px, py) {
         case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
         case 'W': G.enemies.push(new Werewolf(x - 3, y)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
-        case 'K': if (!(G.data.bosses || {}).guitarist) G.enemies.push(new GuitaristBoss(x, y)); break;
+        case 'K': G.enemies.push(new GuitaristBoss(x, y, !!(G.data.bosses || {}).guitarist)); break;   // vencido: só o corpo
         case 'P': {                       // o braseiro fica apoiado no chão
           let gy = ty; while (gy < h - 1 && !'#='.includes(def.map[gy + 1][tx])) gy++;
           G.items.push({ type: 'save', x, y: gy * TILE, w: 16, h: 16 + (gy - ty) * TILE, top: y });

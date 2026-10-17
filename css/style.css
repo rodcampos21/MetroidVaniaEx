@@ -29,14 +29,14 @@ canvas#game {
 }
 #menu::before {                    /* preenche as sobras da tela com a própria arte desfocada */
   content: ""; position: absolute; inset: -40px;
-  background: url(../assets/menu_bg.jpg?v=202610170331) center / cover no-repeat;
+  background: url(../assets/menu_bg.jpg?v=202610170337) center / cover no-repeat;
   filter: blur(18px) brightness(.45);
 }
 #menu .stage {
   position: relative; container-type: inline-size;
   width: min(100vw, calc(100dvh * 2576 / 1405));
   aspect-ratio: 2576 / 1405;
-  background: url(../assets/menu_bg.jpg?v=202610170331) center / 100% 100% no-repeat;
+  background: url(../assets/menu_bg.jpg?v=202610170337) center / 100% 100% no-repeat;
   box-shadow: 0 0 60px rgba(0, 0, 0, .7);
 }
 /* brilho da joia da espada */
@@ -68,7 +68,7 @@ canvas#game {
 }
 #menu .item::before {             /* faixa vermelha com o dragão (só na opção selecionada) */
   content: ""; position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 540 / 145;
-  background: url(../assets/menu_band.png?v=202610170331) 0 0 / 100% 100% no-repeat;
+  background: url(../assets/menu_band.png?v=202610170337) 0 0 / 100% 100% no-repeat;
   opacity: 0; transition: opacity .15s; z-index: -1;
 }
 #menu .item.sel { color: #f0dfcc; }
