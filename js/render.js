@@ -291,9 +291,9 @@ function drawPlayer() {
   const cx = (p.x + p.w / 2) * AP, fy = Math.round((p.y + p.h) * AP);
   for (const gh of p.trail) drawHero('roll', gh.x * AP, gh.y * AP, gh.f, gh.rot, gh.life * 2);
   shadowAt(cx, fy, p.onGround ? 26 : 16);
-  const pose = heroPose(p);
+  let pose = heroPose(p);
   let bob = 0;
-  if (pose === 'run') bob = -Math.round(Math.abs(Math.sin(p.anim * 0.3)) * 4);
+  if (pose === 'run') pose = 'run' + (Math.floor(p.anim / 9) % RUN_FRAMES);   // ciclo de corrida
   else if (pose === 'idle') bob = Math.sin(G.time * 2.6) > 0.6 ? -1 : 0;
   const alpha = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0 ? 0.35 : 1;
   drawHero(pose, cx, fy, p.facing, pose === 'roll' ? p.rollAngle() : 0, alpha, bob);
