@@ -30,7 +30,7 @@ O jogo salva sozinho ao tocar nos **braseiros** (que também recuperam a vida) e
 - 6 salas: Catacumbas Esquecidas, Poço das Correntes, Galeria Submersa, Torre Arruinada, Ponte sobre o Abismo e Torre do Vigia (só com escalada)
 - Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo), **Rolamento** (rola sem levar dano) e **Garras do Vigia** (escalar e saltar de paredes)
 - Estacas de ferro · blocos rachados · Fragmento de Vida
-- Minimapa das salas visitadas, vida em corações, salvamento automático
+- Retrato do herói com barra de vida (arte do autor), minimapa das salas visitadas, salvamento automático
 
 ## Estrutura
 
@@ -39,6 +39,7 @@ index.html        página do jogo e controles de toque
 css/style.css     visual da página e dos botões
 js/rooms.js       MAPA: as salas desenhadas com letras (fácil de editar!)
 assets/hero.png   sprite do herói (recortado da folha de sprites)
+assets/hud_*.png  retrato com moldura e barra de vida
 js/hero.js        posições de cada pose dentro do hero.png
 js/themes.js      paleta e clima de cada sala
 js/pixel.js       ferramentas de pixel art por código

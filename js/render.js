@@ -14,6 +14,18 @@ const FONT_T = '"Cinzel", "Times New Roman", serif';
 const FONT_B = '"Alegreya Sans", "Trebuchet MS", sans-serif';
 const theme = () => THEMES[G.room.def.theme];
 
+// HUD: painel do retrato e a parte vermelha da barra (recortados da arte do autor)
+const HUD = { panel: new Image(), fill: new Image(), lagImg: null, lag: null,
+              track: { x0: 21, x1: 142, y0: 146, y1: 155 } };
+HUD.panel.src = 'assets/hud_panel.png';
+HUD.fill.src = 'assets/hud_fill.png';
+HUD.fill.onload = () => {        // versão clara para o "dano recente"
+  const c = document.createElement('canvas'); c.width = HUD.fill.width; c.height = HUD.fill.height;
+  const g = c.getContext('2d'); g.drawImage(HUD.fill, 0, 0);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(255,225,200,0.75)'; g.fillRect(0, 0, c.width, c.height);
+  HUD.lagImg = c;
+};
+
 // pixel nítido ao ampliar; suave quando a tela é menor que o jogo
 function fitCanvas() {
   const r = canvas.getBoundingClientRect();
@@ -347,30 +359,41 @@ function frameBox(x, y, w, h, alpha = 0.82) {
 
 function drawHUD() {
   const p = G.player, d = G.data;
-  // retrato
-  frameBox(20, 18, 84, 84, 0.9);
-  if (heroImg.complete) {
-    const [fx] = HERO_FRAMES.idle;
-    ctx.drawImage(heroImg, fx + 8, 0, 76, 70, 24, 26, 76, 70);
+  // ---- retrato com barra de vida (arte do autor: assets/hud_panel.png) ----
+  const PX = 14, PY = 12;
+  const T = HUD.track;                                   // trilha da barra dentro do painel
+  if (HUD.panel.complete) ctx.drawImage(HUD.panel, PX, PY);
+  // levou dano: o retrato pisca em vermelho
+  if (p.stun > 0 || p.inv > 0.85) {
+    ctx.fillStyle = `rgba(200,20,20,${0.35 * Math.min(1, (p.inv - 0.6) * 2.5)})`;
+    ctx.fillRect(PX + 7, PY + 7, 137, 131);
   }
-  // vida
-  const segW = 34, bx = 120, by = 30, bw = d.maxHp * segW + 8;
-  frameBox(bx, by, bw, 30, 0.9);
-  for (let i = 0; i < d.maxHp; i++) {
-    const x = bx + 6 + i * segW, full = i < p.hp;
-    ctx.fillStyle = full ? '#8a1414' : '#241010'; ctx.fillRect(x, by + 6, segW - 4, 18);
-    if (full) {
-      ctx.fillStyle = '#c42a22'; ctx.fillRect(x, by + 6, segW - 4, 9);
-      ctx.fillStyle = '#ff6a50'; ctx.fillRect(x, by + 6, segW - 4, 2);
+  if (HUD.fill.complete) {
+    const frac = Math.max(0, p.hp) / d.maxHp;
+    HUD.lag = HUD.lag == null ? frac : Math.max(frac, HUD.lag - 0.6 / 60);   // pedaço perdido some devagar
+    const len = T.x1 - T.x0;
+    const lagW = Math.round(T.x0 + len * HUD.lag), hpW = Math.round(T.x0 + len * frac);
+    if (lagW > hpW && HUD.lagImg) {
+      ctx.save(); ctx.globalAlpha = 0.85;
+      ctx.drawImage(HUD.lagImg, hpW, 0, lagW - hpW, HUD.fill.height, PX + hpW, PY, lagW - hpW, HUD.fill.height);
+      ctx.restore();
     }
+    if (hpW > 0) {
+      const low = p.hp <= 1 ? 0.75 + 0.25 * Math.sin(G.time * 8) : 1;
+      ctx.save(); ctx.globalAlpha = low;
+      ctx.drawImage(HUD.fill, 0, 0, hpW, HUD.fill.height, PX, PY, hpW, HUD.fill.height);
+      ctx.restore();
+    }
+    // divisões: uma para cada ponto de vida
+    ctx.fillStyle = 'rgba(25,4,6,0.7)';
+    for (let k = 1; k < d.maxHp; k++) ctx.fillRect(PX + Math.round(T.x0 + len * k / d.maxHp), PY + T.y0 + 1, 1, T.y1 - T.y0 - 2);
   }
-  text('VIDA', bx, by + 36, { size: 16, font: FONT_T, weight: 800, color: '#9a9284', spacing: 2 });
-  // habilidades
-  let ix = bx + 70;
+  // habilidades (abaixo do retrato)
+  let ix = PX + 4, iy = PY + 168;
   for (const [has, spr] of [[d.abilities.doubleJump, SPR.relicD], [d.abilities.dash, SPR.relicH], [d.abilities.climb, SPR.relicG]]) {
     if (!has) continue;
-    frameBox(ix, by + 38, 30, 30, 0.9);
-    ctx.drawImage(spr, ix + 6, by + 41, 18, 23);
+    frameBox(ix, iy, 30, 30, 0.85);
+    ctx.drawImage(spr, ix + 6, iy + 3, 18, 23);
     ix += 40;
   }
   drawMinimap();
