@@ -292,34 +292,26 @@ function drawWolfFrame(fi, ax, ay, dir, rot, img, alpha = 1, sx = 1, sy = 1) {
 function drawWerewolf(e) {
   if (!wolfImg.complete) return;
   const ax = (e.x + e.w / 2) * AP, ay = (e.y + e.h) * AP;
-  let fi = 0, rot = 0, sx = 1, sy = 1, ox = 0, oy = 0;
-  const st = e.st, walkF = Math.floor(e.walk / 3.2) % 12;
+  let fi = 'w0', rot = 0, sx = 1, sy = 1, ox = 0, oy = 0;
+  const st = e.st, walkF = 'w' + (Math.floor(e.walk / 3.2) % 12);
   switch (e.state) {
     case 'patrol': case 'chase':
-      fi = Math.abs(e.vx) > 1 ? walkF : 0;
-      if (fi === 0 && Math.abs(e.vx) <= 1) sy = 1 + Math.sin(G.time * 3) * 0.012;   // respirando
+      fi = Math.abs(e.vx) > 1 ? walkF : 'w0';
+      if (fi === 'w0') sy = 1 + Math.sin(G.time * 3) * 0.012;      // respirando
       break;
-    case 'alert': {                                   // uivo: joga a cabeça para trás e treme
-      const k = Math.min(1, st / 0.15);
-      fi = 6; rot = -0.22 * k; ox = (Math.random() - 0.5) * 3 * k;
-      break;
-    }
-    case 'dashPrep': fi = 3; rot = 0.12; sy = 0.9; sx = 1.06; ox = -6; break;
-    case 'dash': fi = 9; rot = 0.3; oy = -4; break;
-    case 'windup': fi = 3; rot = -0.16 - (e.combo ? 0 : Math.min(1, st / 0.2) * 0.06); ox = -5; break;
-    case 'claw': fi = 8; rot = 0.24; ox = 8; break;
-    case 'recover': fi = 0; rot = 0.06 * Math.max(0, 1 - st * 3); break;
-    case 'dying': {
-      const k = Math.min(1, st / 0.7);
-      fi = 0; rot = -1.45 * k * k; oy = 6 * k;
-      break;
-    }
+    case 'alert': fi = 'howl'; ox = st > 0.12 ? (Math.random() - 0.5) * 3 : 0; break;   // uivo tremendo
+    case 'dashPrep': fi = 'windup2'; sy = 0.93; sx = 1.05; break;                       // agacha
+    case 'dash': fi = 'dash'; break;
+    case 'windup': fi = e.combo % 2 ? 'windup2' : 'windup'; break;
+    case 'claw': fi = e.combo % 2 ? 'claw2' : 'claw'; ox = 4; break;
+    case 'recover': fi = 'w0'; break;
+    case 'dying': fi = st < 0.25 ? 'death0' : st < 0.55 ? 'death1' : 'death2'; break;
   }
-  if (e.kb > 0) rot -= 0.08;
+  if (e.kb > 0 && e.state !== 'dying') fi = 'hurt';
   // rastro do dash
   for (const gh of e.trail) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    drawWolfFrame(9, (gh.x + e.w / 2) * AP, (gh.y + e.h) * AP - 4, gh.dir, 0.3, wolfImg, gh.life * 1.6);
+    drawWolfFrame('dash', (gh.x + e.w / 2) * AP, (gh.y + e.h) * AP, gh.dir, 0, wolfImg, gh.life * 1.6);
     ctx.restore();
   }
   shadowAt(ax, ay, 40);

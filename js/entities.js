@@ -347,7 +347,7 @@ class Werewolf extends Enemy {
     }
     // é pesado: só cambaleia se não estiver no meio de um ataque
     if (['patrol', 'chase', 'recover', 'alert'].includes(this.state)) {
-      this.kb = 0.14; this.vx = dir * 70;
+      this.kb = 0.18; this.vx = dir * 70;
     }
     if (this.state === 'patrol') { this.dir = -dir; this.set('alert'); }   // vira e encara quem bateu
     this.seen = 3;
