@@ -39,7 +39,7 @@ class GuitaristBoss extends Enemy {
   start() {                                   // o herói entrou na arena
     this.set('intro');
     G.bossBar = this;
-    G.bossTitle = { t: 3.2 }; G.banner = null;
+    G.bossTitle = { t: 3.2 }; G.banner = null; G.roomTitle = null;
     closeBossGate(true);
   }
 

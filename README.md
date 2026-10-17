@@ -65,4 +65,4 @@ abertura (`.`) nas paredes que se encostam. A legenda das letras está no topo d
 
 ### Publicando uma atualização
 
-Antes de cada commit, rode `./atualizar_versao.sh`. Ele marca os arquivos com uma versão nova para o navegador baixar a atualização em vez de usar a cópia antiga em cache.
+Antes de cada commit, rode `./atualizar_versao.sh`. Ele grava a versão nova em `version.json`; o `index.html` lê esse arquivo (que nunca fica em cache) e carrega todos os scripts com essa versão, então o navegador sempre pega a atualização.
