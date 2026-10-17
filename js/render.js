@@ -94,6 +94,7 @@ function gatherLights() {
     if (it.type === 'save') L.push({ x: it.x + 8, y: it.y + 2, r: 90, a: 1, col: [255, 140, 50], flick: 1 });
     else if (it.type === 'D') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [120, 220, 255] });
     else if (it.type === 'H') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [255, 170, 70] });
+    else if (it.type === 'G') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [180, 130, 255] });
     else if (it.type === '+') L.push({ x: it.x + 5, y: it.y + 5, r: 40, a: 0.9, col: [255, 60, 80] });
     else if (it.type === 'E') L.push({ x: it.x + 5, y: it.y + 4, r: 80, a: 1, col: [120, 200, 255] });
     else if (it.type === 'heart') L.push({ x: it.x + 4, y: it.y + 4, r: 18, a: 0.8, col: [255, 60, 80] });
@@ -211,8 +212,8 @@ function drawItems() {
       ctx.drawImage(SPR.brazier, cx - 30, by - 74);
       const fr = SPR.flameBig;
       ctx.drawImage(fr[Math.floor(t * 12) % fr.length], cx - 13, by - 74 + 28 - 32);
-    } else if (it.type === 'D' || it.type === 'H') {
-      const s = it.type === 'D' ? SPR.relicD : SPR.relicH;
+    } else if (it.type === 'D' || it.type === 'H' || it.type === 'G') {
+      const s = it.type === 'D' ? SPR.relicD : it.type === 'H' ? SPR.relicH : SPR.relicG;
       ctx.drawImage(s, (it.x + 5) * AP - 18, (it.y + 5) * AP - 23 + bob);
     } else if (it.type === '+') {
       ctx.drawImage(SPR.life, (it.x + 5) * AP - 18, (it.y + 5) * AP - 22 + bob);
@@ -262,12 +263,19 @@ function shadowAt(x, y, w) {
 }
 
 function heroPose(p) {
+  if (p.wall) return 'wall' + (Math.floor(p.climbAnim / 10) % 2);
   if (p.dashT > 0) return 'roll';
   if (p.stun > 0) return 'hurt';
-  if (p.atkT > 0) return p.crouch ? 'lunge' : 'attack';
+  if (p.atkKind) {
+    const ph = p.atkPhase();
+    if (p.atkKind === 'low') return 'lunge';
+    if (p.atkKind === 'up') return ph === 0 ? 'lunge' : 'jump';
+    return ph === 0 ? 'atk_raise' : 'attack';
+  }
   if (p.crouch) return 'crouch';
+  if (p.sprintT > 0) return 'dash';
   if (!p.onGround) return 'jump';
-  if (Math.abs(p.vx) > 15) return 'run';
+  if (Math.abs(p.vx) > 15) return 'run' + (Math.floor(p.anim / 9) % RUN_FRAMES);   // ciclo de corrida
   return 'idle';
 }
 function drawHero(pose, cx, fy, facing, rot = 0, alpha = 1, bob = 0) {
@@ -285,18 +293,47 @@ function drawHero(pose, cx, fy, facing, rot = 0, alpha = 1, bob = 0) {
   }
   ctx.restore();
 }
+// rastro da espada: arco de a0 até a1 (graus; 0 = para frente, negativo = para cima)
+function drawSlashArc(cx, cy, f, a0, a1, prog, r) {
+  const t = Math.min(1, prog * 1.7), a = a0 + (a1 - a0) * t, fade = prog < 0.55 ? 1 : Math.max(0, 1 - (prog - 0.55) / 0.45);
+  const ccw = a1 < a0, A = d => d * Math.PI / 180;
+  const from = ccw ? Math.min(a0, a + 120) : Math.max(a0, a - 120);
+  ctx.save();
+  ctx.translate(Math.round(cx), Math.round(cy)); ctx.scale(f, 1);
+  // meia-lua: borda de fora inteira, borda de dentro mais fechada (afina na ponta)
+  const mid = (A(from) + A(a)) / 2, off = r * 0.22;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, A(from), A(a), ccw);
+  ctx.arc(-Math.cos(mid) * off, -Math.sin(mid) * off, r * 0.8, A(a), A(from), !ccw);
+  ctx.closePath();
+  ctx.fillStyle = `rgba(200,232,255,${0.3 * fade})`; ctx.fill();
+  ctx.strokeStyle = `rgba(255,255,255,${0.95 * fade})`; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, r, A(Math.abs(a - from) > 40 ? (ccw ? a + 40 : a - 40) : from), A(a), ccw); ctx.stroke();
+  ctx.restore();
+}
 function drawPlayer() {
   const p = G.player;
   if (G.state === 'dead' || !heroImg.complete) return;
   const cx = (p.x + p.w / 2) * AP, fy = Math.round((p.y + p.h) * AP);
-  for (const gh of p.trail) drawHero('roll', gh.x * AP, gh.y * AP, gh.f, gh.rot, gh.life * 2);
-  shadowAt(cx, fy, p.onGround ? 26 : 16);
-  let pose = heroPose(p);
-  let bob = 0;
-  if (pose === 'run') pose = 'run' + (Math.floor(p.anim / 9) % RUN_FRAMES);   // ciclo de corrida
-  else if (pose === 'idle') bob = Math.sin(G.time * 2.6) > 0.6 ? -1 : 0;
+  for (const gh of p.trail) drawHero(gh.pose, gh.x * AP, gh.y * AP, gh.f, gh.rot || 0, gh.life * (gh.tint ? 2.2 : 2));
+  const pose = heroPose(p);
   const alpha = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0 ? 0.35 : 1;
+  if (p.wall) {
+    // encostado na parede: o lado da mão encosta na parede
+    const wx = p.wall < 0 ? p.x * AP - 6 : (p.x + p.w) * AP + 6;
+    drawHero(pose, wx, Math.round((p.y + p.h / 2) * AP), -p.wall, 0, alpha);
+    return;
+  }
+  shadowAt(cx, fy, p.onGround ? 26 : 16);
+  const bob = pose === 'idle' && Math.sin(G.time * 2.6) > 0.6 ? -1 : 0;
   drawHero(pose, cx, fy, p.facing, pose === 'roll' ? p.rollAngle() : 0, alpha, bob);
+  // efeitos dos golpes
+  if (p.atkKind && p.atkPhase() >= 1) {
+    const a = ATK[p.atkKind], prog = 1 - (p.atkT - (a.hitTo - 0.06)) / (a.hitFrom - a.hitTo + 0.06);
+    const cy = (p.y + p.h / 2) * AP;
+    if (p.atkKind === 'down') drawSlashArc(cx + p.facing * 12, cy + 2, p.facing, -110, 35, Math.max(0, prog), 62);
+    else if (p.atkKind === 'up') drawSlashArc(cx + p.facing * 10, cy - 6, p.facing, 55, -115, Math.max(0, prog), 66);
+  }
 }
 
 // ---------------- interface ----------------
@@ -330,7 +367,7 @@ function drawHUD() {
   text('VIDA', bx, by + 36, { size: 16, font: FONT_T, weight: 800, color: '#9a9284', spacing: 2 });
   // habilidades
   let ix = bx + 70;
-  for (const [has, spr] of [[d.abilities.doubleJump, SPR.relicD], [d.abilities.dash, SPR.relicH]]) {
+  for (const [has, spr] of [[d.abilities.doubleJump, SPR.relicD], [d.abilities.dash, SPR.relicH], [d.abilities.climb, SPR.relicG]]) {
     if (!has) continue;
     frameBox(ix, by + 38, 30, 30, 0.9);
     ctx.drawImage(spr, ix + 6, by + 41, 18, 23);

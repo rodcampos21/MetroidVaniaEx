@@ -2,24 +2,33 @@
 //  PERSONAGENS: jogador e inimigos
 // =============================================================
 
+// Tempos dos golpes (segundos)
+const ATK = {
+  down: { total: 0.30, hitFrom: 0.22, hitTo: 0.10 },   // ergue a espada e corta para baixo
+  up:   { total: 0.32, hitFrom: 0.26, hitTo: 0.12 },   // golpe de baixo para cima (com pulinho)
+  low:  { total: 0.22, hitFrom: 0.18, hitTo: 0.06 },   // estocada agachado
+};
+
 class Player {
   constructor() {
     this.x = 0; this.y = 0; this.w = 12; this.h = Player.H;
-    this.crouch = false;
     this.vx = 0; this.vy = 0;
     this.onGround = false;
     this.facing = 1;
+    this.crouch = false;
     this.coyote = 0;       // tempinho para pular logo depois de sair da borda
     this.jumpBuf = 0;      // guarda o "pular" apertado um pouco antes de tocar o chão
     this.jumpCut = false;
     this.airJumps = 0;
-    this.dashT = 0; this.dashCd = 0; this.airDash = true;
-    this.atkT = 0; this.atkCd = 0; this.hitSet = new Set();
+    this.dashT = 0; this.dashCd = 0; this.airDash = true;   // rolamento
+    this.sprintT = 0; this.sprintCd = 0;                    // dash (arrancada no chão)
+    this.wall = 0; this.climbCd = 0; this.lockT = 0; this.climbAnim = 0;   // escalada
+    this.atkT = 0; this.atkKind = null; this.atkCd = 0; this.comboT = 0; this.hitSet = new Set();
     this.inv = 0; this.stun = 0; this.dropT = 0;
     this.hp = 5;
     this.safe = { x: 0, y: 0 };
     this.anim = 0;
-    this.trail = [];       // imagens fantasma do rolamento
+    this.trail = [];       // imagens fantasma do rolamento / dash
   }
 
   static get H() { return 28; }
@@ -33,24 +42,73 @@ class Player {
     return true;
   }
 
+  // Tem parede encostada deste lado? (part: 'all' | 'top' | 'low')
+  wallAt(side, part = 'all') {
+    const y0 = part === 'top' ? this.y : this.y + (part === 'low' ? 12 : 4);
+    const h = part === 'top' ? 8 : this.h - (part === 'low' ? 14 : 8);
+    return collidesSolid({ x: side > 0 ? this.x + this.w + 0.5 : this.x - 1.5, y: y0, w: 1, h });
+  }
+
+  // Ataque está na parte que acerta?
+  atkActive() {
+    if (!this.atkKind) return false;
+    const a = ATK[this.atkKind];
+    return this.atkT <= a.hitFrom && this.atkT > a.hitTo;
+  }
+  atkPhase() {      // 0 = preparando, 1 = golpe, 2 = recuperando
+    const a = ATK[this.atkKind];
+    return this.atkT > a.hitFrom ? 0 : this.atkT > a.hitTo ? 1 : 2;
+  }
   attackBox() {
-    return this.facing > 0
-      ? { x: this.x + this.w - 2, y: this.y - 2, w: 24, h: this.h + 4 }
-      : { x: this.x - 22, y: this.y - 2, w: 24, h: this.h + 4 };
+    const f = this.facing, cx = this.x + this.w / 2;
+    let w = 26, h = this.h + 8, y = this.y - 4;
+    if (this.atkKind === 'up') { w = 24; h = this.h + 18; y = this.y - 20; }
+    if (this.atkKind === 'low') { w = 28; h = 16; y = this.y + this.h - 16; }
+    return { x: f > 0 ? cx - 2 : cx + 2 - w, y, w, h };
+  }
+
+  startAttack() {
+    let kind = 'down';
+    if (this.crouch) kind = 'low';
+    else if (this.comboT > 0) kind = 'up';
+    this.atkKind = kind; this.atkT = ATK[kind].total; this.hitSet.clear();
+    this.comboT = 0; this.sprintT = 0;
   }
 
   update(dt) {
     const I = Input, ab = G.data.abilities;
-    this.inv = Math.max(0, this.inv - dt);
-    this.stun = Math.max(0, this.stun - dt);
-    this.dashCd = Math.max(0, this.dashCd - dt);
-    this.atkCd = Math.max(0, this.atkCd - dt);
-    this.dropT = Math.max(0, this.dropT - dt);
+    for (const k of ['inv', 'stun', 'dashCd', 'sprintCd', 'atkCd', 'dropT', 'climbCd', 'lockT', 'comboT'])
+      this[k] = Math.max(0, this[k] - dt);
     this.coyote = this.onGround ? 0.1 : Math.max(0, this.coyote - dt);
     this.jumpBuf = I.pressed.jump ? 0.12 : Math.max(0, this.jumpBuf - dt);
 
     let dir = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0);
     if (this.stun > 0) dir = 0;
+    if (this.lockT > 0) dir = this.facing;          // logo depois do pulo de parede
+
+    // ---------------- agarrado na parede ----------------
+    if (this.wall) {
+      const side = this.wall;
+      this.facing = side;
+      this.vx = 0;
+      if (I.down.up) this.vy = -55; else if (I.down.down) this.vy = 95; else this.vy = 0;
+      this.climbAnim += Math.abs(this.vy) * dt;
+      if (this.jumpBuf > 0) {                                   // pulo de parede
+        this.wall = 0; this.jumpBuf = 0;
+        this.vx = -side * 190; this.vy = -PHYS.JUMP * 0.92; this.jumpCut = true;
+        this.facing = -side; this.lockT = 0.16; this.climbCd = 0.2; this.airJumps = 1;
+        spawnParticles(side > 0 ? this.x + this.w : this.x, this.y + this.h / 2, 8, '#6a6a5e', { angle: side > 0 ? Math.PI : 0, spread: 1.6, speed: 50, life: 0.35 });
+      } else if (I.down.up && !this.wallAt(side, 'top') && this.wallAt(side, 'low')) {   // subir na borda
+        this.wall = 0; this.vy = -230; this.vx = side * 80; this.climbCd = 0.3; this.lockT = 0.22;
+      } else if (dir === -side || !this.wallAt(side) || this.stun > 0) {
+        this.wall = 0; this.climbCd = 0.2;
+      }
+      moveBody(this, dt);
+      if (this.onGround) this.wall = 0;
+      this.anim += 0;
+      this.afterMove();
+      return;
+    }
 
     if (this.dashT > 0) {
       // ---- rolamento (atravessa inimigos sem se ferir) ----
@@ -58,20 +116,32 @@ class Player {
       this.vx = this.facing * PHYS.DASH_SPEED;
       this.vy = 0;
       if (Math.floor(this.dashT * 60) % 4 === 0)
-        this.trail.push({ x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() });
+        this.trail.push({ pose: 'roll', x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() });
       if (this.onGround && Math.random() < 0.5)
-        G.particles.push({ x: this.x + this.w / 2, y: this.y + this.h - 1, vx: -this.facing * 30, vy: -10,
-          life: 0.35, max: 0.35, color: '#5a5a50', size: 2, grav: 0 });
+        G.particles.push({ x: this.x + this.w / 2, y: this.y + this.h - 1, vx: -this.facing * 30, vy: -10, life: 0.35, max: 0.35, color: '#5a5a50', size: 2, grav: 0 });
       if (this.dashT <= 0) this.vx = this.facing * PHYS.RUN;
     } else {
-      // ---- andar ----
       if (dir && this.atkT <= 0) this.facing = dir;
       // ---- agachar ----
-      if (I.down.down && this.onGround && this.stun <= 0 && !this.crouch) {
+      if (I.down.down && this.onGround && this.stun <= 0 && !this.crouch && this.sprintT <= 0) {
         this.crouch = true; this.y += Player.H - Player.CH; this.h = Player.CH;
       } else if (this.crouch && (!I.down.down || !this.onGround)) this.standUp();
       if (this.crouch) dir = 0;
-      if (this.stun > 0) this.vx = approach(this.vx, 0, 300 * dt);
+
+      // ---- dash (arrancada rápida no chão) ----
+      if (I.pressed.sprint && this.onGround && this.sprintCd <= 0 && this.stun <= 0 && this.standUp()) {
+        if (dir) this.facing = dir;
+        this.sprintT = PHYS.SPRINT_TIME; this.sprintCd = 0.45; this.atkT = 0; this.atkKind = null;
+        spawnParticles(this.x + this.w / 2, this.y + this.h, 8, '#6a6a5e', { angle: this.facing > 0 ? Math.PI : 0, spread: 1, speed: 60, life: 0.35 });
+      }
+      if (this.sprintT > 0) {
+        this.sprintT -= dt;
+        this.vx = this.facing * PHYS.SPRINT_SPEED;
+        if (Math.floor(this.sprintT * 60) % 3 === 0)
+          this.trail.push({ pose: 'dash', x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.16, tint: true });
+        if (!this.onGround) this.sprintT = 0;
+      } else if (this.stun > 0) this.vx = approach(this.vx, 0, 300 * dt);
+      else if (this.atkT > 0 && this.onGround) this.vx = approach(this.vx, 0, 900 * dt);   // firma os pés ao golpear
       else this.vx = approach(this.vx, dir * PHYS.RUN, (this.onGround ? 1400 : 900) * dt);
       this.vy = Math.min(this.vy + PHYS.GRAVITY * dt, PHYS.MAX_FALL);
 
@@ -80,42 +150,61 @@ class Player {
         this.dropT = 0.25; this.jumpBuf = 0; this.y += 1;
       } else if (this.jumpBuf > 0 && this.stun <= 0 && this.standUp()) {
         if (this.onGround || this.coyote > 0) {
-          this.vy = -PHYS.JUMP; this.jumpBuf = 0; this.coyote = 0; this.jumpCut = true;
+          this.vy = -PHYS.JUMP; this.jumpBuf = 0; this.coyote = 0; this.jumpCut = true; this.sprintT = 0;
           spawnParticles(this.x + this.w / 2, this.y + this.h, 6, '#6a6a5e', { angle: -Math.PI / 2, spread: 2.6, speed: 40, life: 0.35 });
         } else if (ab.doubleJump && this.airJumps > 0) {
           this.airJumps--; this.vy = -PHYS.DOUBLE_JUMP; this.jumpBuf = 0; this.jumpCut = true;
           spawnParticles(this.x + this.w / 2, this.y + this.h, 14, '#9ff0ff', { angle: Math.PI / 2, spread: 2.6, speed: 70, life: 0.4 });
         }
       }
-      // soltar o botão no meio do pulo = pulo mais baixo
       if (this.jumpCut && !I.down.jump && this.vy < 0) { this.vy *= 0.45; this.jumpCut = false; }
       if (this.vy >= 0) this.jumpCut = false;
 
-      // ---- iniciar dash ----
+      // ---- iniciar rolamento ----
       if (I.pressed.dash && ab.dash && this.dashCd <= 0 && this.stun <= 0 && (this.onGround || this.airDash) && this.standUp()) {
         if (dir) this.facing = dir;
-        this.dashT = PHYS.DASH_TIME; this.dashCd = 0.45; this.atkT = 0;
+        this.dashT = PHYS.DASH_TIME; this.dashCd = 0.45; this.atkT = 0; this.atkKind = null; this.sprintT = 0;
         if (!this.onGround) this.airDash = false;
+      }
+
+      // ---- agarrar na parede ----
+      if (ab.climb && !this.onGround && dir !== 0 && this.climbCd <= 0 && this.atkT <= 0 && this.wallAt(dir) && this.vy > -150) {
+        this.wall = dir; this.vx = 0; this.vy = 0; this.airJumps = 1; this.airDash = true; this.sprintT = 0;
       }
     }
 
     // ---- ataque ----
-    if (I.pressed.attack && this.atkCd <= 0 && this.stun <= 0 && this.dashT <= 0) {
-      this.atkT = 0.22; this.atkCd = 0.34; this.hitSet.clear();
+    if (I.pressed.attack && this.atkT <= 0 && this.atkCd <= 0 && this.stun <= 0 && this.dashT <= 0 && !this.wall) this.startAttack();
+    if (this.atkT > 0) {
+      const before = this.atkPhase();
+      this.atkT -= dt;
+      if (this.atkT <= 0) {
+        if (this.atkKind === 'down') this.comboT = 0.35;     // janela para o golpe de baixo para cima
+        this.atkKind = null; this.atkCd = 0.05;
+      } else {
+        if (before === 0 && this.atkPhase() === 1) {          // começou o corte
+          if (this.atkKind === 'up') { if (this.onGround) this.vy = -170; else this.vy = Math.min(this.vy, -110); }
+          else if (this.onGround) this.vx = this.facing * 70;
+          G.shake = Math.max(G.shake, 0.05);
+        }
+        if (this.atkActive()) this.doAttack();
+      }
     }
-    if (this.atkT > 0) { this.atkT -= dt; this.doAttack(); }
-
-    for (const gh of this.trail) gh.life -= dt;
-    this.trail = this.trail.filter(gh => gh.life > 0);
 
     moveBody(this, dt);
     if (this.hitWallX && this.dashT > 0) this.dashT = 0;
+    if (this.hitWallX && this.sprintT > 0) this.sprintT = 0;
+    this.afterMove();
+    this.anim += Math.abs(this.vx) * dt;
+  }
 
+  afterMove() {
+    for (const gh of this.trail) gh.life -= 1 / 60;
+    this.trail = this.trail.filter(gh => gh.life > 0);
     if (this.onGround) {
       this.airJumps = 1; this.airDash = true;
       if (!touchingSpikes(this)) this.safe = { x: this.x, y: this.y };
     }
-    this.anim += Math.abs(this.vx) * dt;
   }
 
   doAttack() {
@@ -124,8 +213,10 @@ class Player {
       if (e.dead || this.hitSet.has(e) || !overlaps(box, e)) continue;
       this.hitSet.add(e);
       e.hurt(1, this.facing);
+      if (this.atkKind === 'up') e.vy = -160;
+      spawnParticles(e.x + e.w / 2, e.y + e.h / 2, 8, '#e8f4ff', { angle: this.atkKind === 'up' ? -Math.PI / 2 : this.facing > 0 ? 0 : Math.PI, spread: 1.4, speed: 120, life: 0.25 });
     }
-    // quebrar caixotes
+    // quebrar blocos rachados
     const x0 = Math.floor(box.x / TILE), x1 = Math.floor((box.x + box.w) / TILE);
     const y0 = Math.floor(box.y / TILE), y1 = Math.floor((box.y + box.h) / TILE);
     for (let ty = y0; ty <= y1; ty++)
@@ -148,7 +239,7 @@ class Player {
     spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 12, '#8a1a1a', { speed: 80, grav: 300, life: 0.5 });
     if (this.hp <= 0) { playerDied(); return; }
     this.inv = 1.0;
-    this.dashT = 0;
+    this.dashT = 0; this.sprintT = 0; this.wall = 0; this.atkT = 0; this.atkKind = null;
     this.standUp();
     if (hazard) {
       this.toSafe();
@@ -163,7 +254,7 @@ class Player {
 
   toSafe() {
     this.x = this.safe.x; this.y = this.safe.y;
-    this.vx = 0; this.vy = 0; this.stun = 0.2;
+    this.vx = 0; this.vy = 0; this.stun = 0.2; this.wall = 0;
     G.fade = 0.4;
   }
 }

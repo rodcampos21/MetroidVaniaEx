@@ -15,6 +15,8 @@ const PHYS = {
   DOUBLE_JUMP: 300,   // segundo pulo
   DASH_SPEED: 240,     // rolamento
   DASH_TIME: 0.3,
+  SPRINT_SPEED: 330,   // dash no chão
+  SPRINT_TIME: 0.17,
 };
 
 // Estado global do jogo

@@ -13,7 +13,8 @@ const Input = (() => {
     ArrowDown: 'down', KeyS: 'down',
     KeyZ: 'jump', Space: 'jump', KeyK: 'jump',
     KeyX: 'attack', KeyJ: 'attack',
-    KeyC: 'dash', KeyL: 'dash', ShiftLeft: 'dash', ShiftRight: 'dash',
+    KeyC: 'dash', KeyL: 'dash',                       // rolar
+    ShiftLeft: 'sprint', ShiftRight: 'sprint', KeyV: 'sprint', KeyI: 'sprint',  // dash
     Escape: 'pause', KeyP: 'pause', Enter: 'pause',
   };
 

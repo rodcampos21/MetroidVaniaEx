@@ -6,7 +6,7 @@ const SAVE_KEY = 'metroidvaniaex_save_v3';
 
 function newData() {
   return {
-    abilities: { doubleJump: false, dash: false },
+    abilities: { doubleJump: false, dash: false, climb: false },
     maxHp: 5,
     collected: {},
     visited: {},
@@ -46,7 +46,7 @@ function enterRoom(id, px, py) {
           G.items.push({ type: 'save', x, y: gy * TILE, w: 16, h: 16 + (gy - ty) * TILE, top: y });
           break;
         }
-        case 'D': case 'H': case '+':
+        case 'D': case 'H': case 'G': case '+':
           if (!G.data.collected[key]) G.items.push({ type: c, key, x: x + 3, y: y + 3, w: 10, h: 10 });
           break;
         case 'E': G.items.push({ type: 'E', x: x + 3, y: y - 4, w: 10, h: 20 }); break;
@@ -138,6 +138,10 @@ function updateItems(dt) {
       case 'H':
         collect(it, () => { G.data.abilities.dash = true; },
           'Rolamento', 'Aperte ROLAR (tecla C) para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.', '#ffb347');
+        break;
+      case 'G':
+        collect(it, () => { G.data.abilities.climb = true; },
+          'Garras do Vigia', 'Pule numa parede e segure na direção dela para se agarrar. Use ↑ e ↓ para escalar e PULAR para saltar de uma parede à outra. Algo brilha no alto da ponte...', '#b48aff');
         break;
       case '+':
         collect(it, () => { G.data.maxHp++; p.hp = G.data.maxHp; },

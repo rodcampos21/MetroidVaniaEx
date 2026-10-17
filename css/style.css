@@ -32,7 +32,7 @@ canvas#game {
 }
 #menu .hero {
   width: 206px; height: 272px;
-  background: url(../assets/hero.png) 0 0 / 2614px 294px no-repeat;
+  background: url(../assets/hero.png) 0 0 / 2982px 294px no-repeat;
   image-rendering: pixelated;
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .8)) brightness(.95);
   animation: breathe 2.6s ease-in-out infinite;
@@ -77,7 +77,7 @@ body.in-menu #touch { display: none !important; }
 @media (hover: none) and (pointer: coarse) {
   #touch { display: block; }
   #menu .help { display: none; }
-  #menu .hero { width: 154px; height: 204px; background-size: 1961px 221px; }
+  #menu .hero { width: 154px; height: 204px; background-size: 2237px 221px; }
 
   @media (orientation: portrait) {
     #wrap { align-items: flex-start; padding-top: max(10vh, env(safe-area-inset-top)); }
@@ -100,7 +100,7 @@ body.in-menu #touch { display: none !important; }
 
   #buttons {
     position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom));
-    width: 190px; height: 160px; z-index: 10;
+    width: 200px; height: 176px; z-index: 10;
   }
   #buttons button, #pauseBtn {
     position: absolute; font-family: "Cinzel", serif; font-weight: 800; color: #e8e0c8;
@@ -112,7 +112,8 @@ body.in-menu #touch { display: none !important; }
   #buttons button.on, #pauseBtn.on { transform: scale(.92); filter: brightness(1.4); }
   .b-jump { right: 0;    bottom: 0;    width: 80px; height: 80px; font-size: 24px; background: radial-gradient(circle at 35% 30%, #4a6a74, #22343a 65%, #10181b); }
   .b-atk  { right: 90px; bottom: 16px; width: 68px; height: 68px; font-size: 26px; background: radial-gradient(circle at 35% 30%, #8a3a32, #4a1a16 65%, #200a08); }
-  .b-dash { right: 28px; bottom: 92px; width: 62px; height: 62px; font-size: 11px; background: radial-gradient(circle at 35% 30%, #7a6040, #3a2c1c 65%, #1a120a); }
+  .b-sprint { right: 104px; bottom: 98px; width: 56px; height: 56px; font-size: 10px; background: radial-gradient(circle at 35% 30%, #4a5a8a, #22284a 65%, #0c1020); }
+  .b-dash { right: 18px; bottom: 98px; width: 62px; height: 62px; font-size: 11px; background: radial-gradient(circle at 35% 30%, #7a6040, #3a2c1c 65%, #1a120a); }
 
   #pauseBtn {
     position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; margin-left: -20px;

@@ -253,6 +253,7 @@ function buildSprites() {
   SPR.batHit = batFrame(1, true).canvas();
   SPR.relicD = relicSprite('#3ab0d8', '#9ff0ff', '#1c6a8a').canvas();
   SPR.relicH = relicSprite('#e08a2a', '#ffd28a', '#8a4a14').canvas();
+  SPR.relicG = relicSprite('#8a5ae0', '#d0b8ff', '#4a2a8a').canvas();
   SPR.life = lifeShardSprite().canvas();
   SPR.soul = soulSprite().canvas();
   SPR.brazier = brazierSprite().canvas();

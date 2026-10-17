@@ -12,9 +12,11 @@ Abra o `index.html` no navegador — ou, se o GitHub Pages estiver ativado, aces
 |---|---|---|
 | Mover | Setas / WASD | Direcional (esquerda) |
 | Pular | Z / Espaço | ▲ |
-| Atacar | X | ⚔ |
+| Atacar (aperte 2× para o combo: corte para baixo + corte para cima) | X | ⚔ |
+| Dash (arrancada no chão) | Shift / V | DASH |
 | Rolar (depois de pegar) | C / Shift | ROLAR |
-| Agachar | ↓ | direcional pra baixo |
+| Agachar (atacar agachado = estocada) | ↓ | direcional pra baixo |
+| Escalar (depois de pegar as Garras) | pule na parede e segure a direção · ↑/↓ sobe/desce · pular = salto de parede | igual, com o direcional |
 | Descer da plataforma de madeira | ↓ + pular | direcional pra baixo + ▲ |
 | Pausar | Esc / P | II |
 
@@ -23,10 +25,10 @@ O jogo salva sozinho ao tocar nos **braseiros** (que também recuperam a vida) e
 ## O que já existe
 
 - Pixel art sombria: masmorras de pedra com musgo, tochas, correntes, estandartes, névoa e luz dinâmica
-- Herói com o sprite do autor (parado, correndo, pulando, atacando, agachado, golpe agachado, ferido e rolando)
+- Herói com o sprite do autor, sem a borda branca: parado, corrida em 6 quadros, pulo, combo de espada (ergue → corta para baixo → corta para cima), agachado, estocada, ferido, rolamento, dash e escalada
 - Inimigos: Esqueleto com espada e escudo, Morcego
-- 5 salas: Catacumbas Esquecidas, Poço das Correntes, Galeria Submersa, Torre Arruinada e Ponte sobre o Abismo
-- Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo) e **Rolamento** (rola sem levar dano)
+- 6 salas: Catacumbas Esquecidas, Poço das Correntes, Galeria Submersa, Torre Arruinada, Ponte sobre o Abismo e Torre do Vigia (só com escalada)
+- Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo), **Rolamento** (rola sem levar dano) e **Garras do Vigia** (escalar e saltar de paredes)
 - Estacas de ferro · blocos rachados · Fragmento de Vida
 - Minimapa das salas visitadas, vida em corações, salvamento automático
 
