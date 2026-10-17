@@ -7,18 +7,18 @@
 //
 //  Legenda dos blocos:
 //   #  parede / chão          =  plataforma (atravessa por baixo)
-//   ^  espinhos               B  bloco quebrável (ataque)
-//   @  início do jogador      P  lanterna de salvamento
-//   W  inimigo: Cogumelinho   F  inimigo voador: Plumito
-//   D  item: Pulo Duplo       H  item: Impulso (dash)
-//   +  item: Coração extra    E  fim da demo
+//   ^  estacas de ferro       B  bloco rachado (quebra no ataque)
+//   @  início do jogador      P  braseiro (salvamento)
+//   W  inimigo: Esqueleto     F  inimigo voador: Morcego
+//   D  item: Salto Etéreo     H  item: Rolamento
+//   +  item: Fragmento de Vida E  fim da demo (portal)
 // =============================================================
 
 const ROOMS = {
   entrada: {
-    name: 'Campina do Vilarejo',
+    name: 'Catacumbas Esquecidas',
     wx: 0, wy: 0,
-    theme: 'campina', map: [
+    theme: 'catacumbas', map: [
       '########################################',
       '#......................................#',
       '#......................................#',
@@ -35,9 +35,9 @@ const ROOMS = {
   },
 
   poco: {
-    name: 'Poço dos Desejos',
+    name: 'Poço das Correntes',
     wx: 2, wy: 0,
-    theme: 'poco', map: [
+    theme: 'correntes', map: [
       '########....########',
       '#..................#',
       '#..................#',
@@ -66,9 +66,9 @@ const ROOMS = {
   },
 
   galeria: {
-    name: 'Bosque Sussurrante',
+    name: 'Galeria Submersa',
     wx: 0, wy: 1,
-    theme: 'bosque', map: [
+    theme: 'submersa', map: [
       '########################################',
       '#......................................#',
       '#......................................#',
@@ -85,9 +85,9 @@ const ROOMS = {
   },
 
   torre: {
-    name: 'Moinho dos Ventos',
+    name: 'Torre Arruinada',
     wx: 2, wy: -1,
-    theme: 'moinho', map: [
+    theme: 'torre', map: [
       '########################################',
       '#......................................#',
       '#......H...............................#',
@@ -104,9 +104,9 @@ const ROOMS = {
   },
 
   ponte: {
-    name: 'Ponte do Pôr do Sol',
+    name: 'Ponte sobre o Abismo',
     wx: 4, wy: -1,
-    theme: 'ponte', map: [
+    theme: 'abismo', map: [
       '########################################',
       '#......................................#',
       '#......................................#',

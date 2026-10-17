@@ -4,7 +4,8 @@
 
 class Player {
   constructor() {
-    this.x = 0; this.y = 0; this.w = 10; this.h = 20;
+    this.x = 0; this.y = 0; this.w = 12; this.h = Player.H;
+    this.crouch = false;
     this.vx = 0; this.vy = 0;
     this.onGround = false;
     this.facing = 1;
@@ -18,13 +19,24 @@ class Player {
     this.hp = 5;
     this.safe = { x: 0, y: 0 };
     this.anim = 0;
-    this.trail = [];       // imagens fantasma do dash
+    this.trail = [];       // imagens fantasma do rolamento
+  }
+
+  static get H() { return 28; }
+  static get CH() { return 19; }   // altura agachado
+
+  standUp() {
+    if (!this.crouch) return true;
+    const test = { x: this.x, y: this.y - (Player.H - Player.CH), w: this.w, h: Player.H };
+    if (collidesSolid(test)) return false;
+    this.crouch = false; this.y = test.y; this.h = Player.H;
+    return true;
   }
 
   attackBox() {
     return this.facing > 0
-      ? { x: this.x + this.w, y: this.y - 3, w: 20, h: this.h + 6 }
-      : { x: this.x - 20, y: this.y - 3, w: 20, h: this.h + 6 };
+      ? { x: this.x + this.w - 2, y: this.y - 2, w: 24, h: this.h + 4 }
+      : { x: this.x - 22, y: this.y - 2, w: 24, h: this.h + 4 };
   }
 
   update(dt) {
@@ -41,19 +53,24 @@ class Player {
     if (this.stun > 0) dir = 0;
 
     if (this.dashT > 0) {
-      // ---- dash ----
+      // ---- rolamento (atravessa inimigos sem se ferir) ----
       this.dashT -= dt;
       this.vx = this.facing * PHYS.DASH_SPEED;
       this.vy = 0;
-      if (Math.floor(this.dashT * 60) % 3 === 0)
-        this.trail.push({ x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.25 });
-      if (Math.random() < 0.6)
-        G.particles.push({ x: this.x + this.w / 2, y: this.y + 4 + Math.random() * 14, vx: -this.facing * 20, vy: 0,
-          life: 0.3, max: 0.3, color: '#ffe1a8', size: 2, grav: 0 });
+      if (Math.floor(this.dashT * 60) % 4 === 0)
+        this.trail.push({ x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() });
+      if (this.onGround && Math.random() < 0.5)
+        G.particles.push({ x: this.x + this.w / 2, y: this.y + this.h - 1, vx: -this.facing * 30, vy: -10,
+          life: 0.35, max: 0.35, color: '#5a5a50', size: 2, grav: 0 });
       if (this.dashT <= 0) this.vx = this.facing * PHYS.RUN;
     } else {
       // ---- andar ----
       if (dir && this.atkT <= 0) this.facing = dir;
+      // ---- agachar ----
+      if (I.down.down && this.onGround && this.stun <= 0 && !this.crouch) {
+        this.crouch = true; this.y += Player.H - Player.CH; this.h = Player.CH;
+      } else if (this.crouch && (!I.down.down || !this.onGround)) this.standUp();
+      if (this.crouch) dir = 0;
       if (this.stun > 0) this.vx = approach(this.vx, 0, 300 * dt);
       else this.vx = approach(this.vx, dir * PHYS.RUN, (this.onGround ? 1400 : 900) * dt);
       this.vy = Math.min(this.vy + PHYS.GRAVITY * dt, PHYS.MAX_FALL);
@@ -61,13 +78,13 @@ class Player {
       // ---- pular / descer da plataforma ----
       if (this.jumpBuf > 0 && I.down.down && this.onGround && this.groundTile === '=') {
         this.dropT = 0.25; this.jumpBuf = 0; this.y += 1;
-      } else if (this.jumpBuf > 0 && this.stun <= 0) {
+      } else if (this.jumpBuf > 0 && this.stun <= 0 && this.standUp()) {
         if (this.onGround || this.coyote > 0) {
           this.vy = -PHYS.JUMP; this.jumpBuf = 0; this.coyote = 0; this.jumpCut = true;
-          spawnParticles(this.x + this.w / 2, this.y + this.h, 5, '#fff6e0', { angle: -Math.PI / 2, spread: 2.4, speed: 40, life: 0.3 });
+          spawnParticles(this.x + this.w / 2, this.y + this.h, 6, '#6a6a5e', { angle: -Math.PI / 2, spread: 2.6, speed: 40, life: 0.35 });
         } else if (ab.doubleJump && this.airJumps > 0) {
           this.airJumps--; this.vy = -PHYS.DOUBLE_JUMP; this.jumpBuf = 0; this.jumpCut = true;
-          spawnParticles(this.x + this.w / 2, this.y + this.h, 12, '#7df9ff', { angle: Math.PI / 2, spread: 2.6, speed: 70, life: 0.35 });
+          spawnParticles(this.x + this.w / 2, this.y + this.h, 14, '#9ff0ff', { angle: Math.PI / 2, spread: 2.6, speed: 70, life: 0.4 });
         }
       }
       // soltar o botão no meio do pulo = pulo mais baixo
@@ -75,7 +92,7 @@ class Player {
       if (this.vy >= 0) this.jumpCut = false;
 
       // ---- iniciar dash ----
-      if (I.pressed.dash && ab.dash && this.dashCd <= 0 && this.stun <= 0 && (this.onGround || this.airDash)) {
+      if (I.pressed.dash && ab.dash && this.dashCd <= 0 && this.stun <= 0 && (this.onGround || this.airDash) && this.standUp()) {
         if (dir) this.facing = dir;
         this.dashT = PHYS.DASH_TIME; this.dashCd = 0.45; this.atkT = 0;
         if (!this.onGround) this.airDash = false;
@@ -84,7 +101,7 @@ class Player {
 
     // ---- ataque ----
     if (I.pressed.attack && this.atkCd <= 0 && this.stun <= 0 && this.dashT <= 0) {
-      this.atkT = 0.16; this.atkCd = 0.3; this.hitSet.clear();
+      this.atkT = 0.22; this.atkCd = 0.34; this.hitSet.clear();
     }
     if (this.atkT > 0) { this.atkT -= dt; this.doAttack(); }
 
@@ -115,7 +132,7 @@ class Player {
       for (let tx = x0; tx <= x1; tx++)
         if (tileAt(tx, ty) === 'B') {
           setTile(tx, ty, '.');
-          spawnParticles(tx * TILE + 8, ty * TILE + 8, 14, '#d39a5a', { speed: 90, grav: 400, size: 3, life: 0.6 });
+          spawnParticles(tx * TILE + 8, ty * TILE + 8, 18, THEMES[G.room.def.theme].stone[3], { speed: 90, grav: 400, size: 3, life: 0.7 });
           G.shake = Math.max(G.shake, 0.1);
         }
   }
@@ -128,10 +145,11 @@ class Player {
     }
     this.hp -= dmg;
     G.shake = 0.25;
-    spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 10, '#ff5a7a', { speed: 80, life: 0.4 });
+    spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 12, '#8a1a1a', { speed: 80, grav: 300, life: 0.5 });
     if (this.hp <= 0) { playerDied(); return; }
     this.inv = 1.0;
     this.dashT = 0;
+    this.standUp();
     if (hazard) {
       this.toSafe();
     } else {
@@ -140,6 +158,8 @@ class Player {
       this.vy = -180;
     }
   }
+
+  rollAngle() { return (1 - this.dashT / PHYS.DASH_TIME) * Math.PI * 2 * this.facing; }
 
   toSafe() {
     this.x = this.safe.x; this.y = this.safe.y;
@@ -172,13 +192,13 @@ class Enemy {
   }
 }
 
-// COGUMELINHO: anda de um lado pro outro e vira nas paredes e bordas
+// ESQUELETO: anda de um lado pro outro e vira nas paredes e bordas
 class Walker extends Enemy {
-  constructor(x, y) { super(x, y, 12, 12, 3); this.dir = -1; this.color = '#ef5a64'; }
+  constructor(x, y) { super(x, y, 14, 24, 3); this.dir = -1; this.color = '#cfc8b0'; }
   update(dt) {
     this.t += dt; this.flash -= dt;
     if (this.kb > 0) { this.kb -= dt; this.vx = approach(this.vx, 0, 400 * dt); }
-    else this.vx = this.dir * 30;
+    else this.vx = this.dir * 26;
     this.vy = Math.min(this.vy + PHYS.GRAVITY * dt, PHYS.MAX_FALL);
     moveBody(this, dt);
     if (this.kb > 0) return;
@@ -191,9 +211,9 @@ class Walker extends Enemy {
   }
 }
 
-// PLUMITO: flutua e persegue o jogador quando ele chega perto (atravessa paredes)
+// MORCEGO: flutua e persegue o jogador quando ele chega perto (atravessa paredes)
 class Flyer extends Enemy {
-  constructor(x, y) { super(x, y, 12, 10, 2); this.color = '#c9a8ff'; }
+  constructor(x, y) { super(x, y, 12, 10, 2); this.color = '#3b2830'; }
   update(dt) {
     this.t += dt; this.flash -= dt;
     const p = G.player;

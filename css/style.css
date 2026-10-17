@@ -2,84 +2,74 @@
 
 html, body {
   margin: 0; height: 100%;
-  background: #241a2e; color: #fff;
+  background: #050607; color: #d8d0b8;
   overflow: hidden;
   touch-action: none;
   user-select: none; -webkit-user-select: none;
-  font-family: "M PLUS Rounded 1c", "Nunito", "Trebuchet MS", sans-serif;
+  font-family: "Alegreya Sans", "Trebuchet MS", sans-serif;
 }
 
 #wrap {
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse at 50% 30%, #3a2c48 0%, #1a1222 75%);
 }
 
 canvas#game {
-  width: min(100vw, calc(100dvh * 320 / 192));
-  aspect-ratio: 320 / 192;
-  border-radius: 6px;
-  box-shadow: 0 6px 40px rgba(0, 0, 0, .45);
+  width: min(100vw, calc(100dvh * 5 / 3));
+  aspect-ratio: 5 / 3;
+  image-rendering: pixelated;
+  background: #07090a;
 }
 
 /* ---------- menu ---------- */
 #menu {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-  background:
-    radial-gradient(ellipse at 75% 18%, rgba(255, 246, 200, .9) 0%, rgba(255, 246, 200, 0) 35%),
-    linear-gradient(#7cc8ff 0%, #dff4ff 58%, #a9dca0 58.2%, #79c06f 75%, #ecbd62 75.3%, #c98f3c 100%);
+  position: absolute; inset: 0; z-index: 5; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
   text-align: center; padding: 20px;
-  z-index: 5; overflow: hidden;
-}
-#menu .clouds {
-  position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 60px 22px at 15% 22%, #fff 70%, transparent 72%),
-    radial-gradient(ellipse 40px 26px at 19% 18%, #fff 70%, transparent 72%),
-    radial-gradient(ellipse 70px 24px at 62% 12%, #fff 70%, transparent 72%),
-    radial-gradient(ellipse 44px 28px at 66% 8%, #fff 70%, transparent 72%),
-    radial-gradient(ellipse 50px 18px at 88% 34%, #fff 70%, transparent 72%);
-  opacity: .9;
-  animation: drift 40s linear infinite alternate;
+    radial-gradient(ellipse at 50% 55%, rgba(255, 140, 50, .12) 0%, rgba(0, 0, 0, 0) 45%),
+    radial-gradient(ellipse at 50% 100%, #1d3236 0%, #0b1214 55%, #050607 100%);
 }
-@keyframes drift { to { transform: translateX(-60px); } }
+#menu .hero {
+  width: 206px; height: 272px;
+  background: url(../assets/hero.png) 0 0 / 1510px 294px no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .8)) brightness(.95);
+  animation: breathe 2.6s ease-in-out infinite;
+  margin-bottom: -6px;
+}
+@keyframes breathe { 50% { transform: translateY(-3px); } }
+#menu .torch {
+  position: absolute; top: 18%; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 150, 60, .35) 0%, rgba(255, 120, 40, .08) 40%, transparent 70%);
+  animation: flicker 1.7s infinite alternate;
+}
+#menu .torch.left { left: 6%; } #menu .torch.right { right: 6%; animation-delay: -.8s; }
+@keyframes flicker { 0% { opacity: .7; transform: scale(.96); } 40% { opacity: 1; } 70% { opacity: .8; transform: scale(1.03); } 100% { opacity: .95; } }
 
-#menu .logo {
-  position: relative;
-  padding: 16px 28px 12px;
-  background: linear-gradient(#ffffff, #e3ebf8);
-  border: 2px solid #5b6fa8; border-radius: 16px;
-  box-shadow: 0 4px 0 #3b4f88, 0 10px 30px rgba(40, 30, 80, .35);
-}
 #menu h1 {
-  margin: 0; font-weight: 800;
-  font-size: clamp(22px, 6vw, 44px);
-  color: #ff8f5a;
-  text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 4px 0 #c4532f;
-  letter-spacing: 1px;
+  margin: 0; font-family: "Cinzel", serif; font-weight: 800;
+  font-size: clamp(26px, 6vw, 56px); letter-spacing: 4px;
+  color: #d8d0b8; text-shadow: 0 3px 0 #000, 0 0 24px rgba(255, 140, 50, .25);
 }
-#menu h1 span { color: #4f8fe6; margin-left: 8px; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 4px 0 #2f62b8; }
-#menu .sub { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: #5a7fd0; }
-
+#menu h1 span { color: #b0302a; }
+#menu .sub {
+  margin: 4px 0 0; font-family: "Cinzel", serif; font-size: clamp(12px, 2.2vw, 18px);
+  letter-spacing: 6px; text-transform: uppercase; color: #8a8270;
+}
+#menu .buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
 #menu button {
-  position: relative;
-  font: inherit; font-weight: 800; font-size: 16px;
-  min-width: 220px; padding: 12px 18px;
-  color: #fff8ee;
-  background: linear-gradient(#e2a76a, #b07440);
-  border: 2px solid #5a3518; border-radius: 12px;
-  box-shadow: inset 0 2px 0 rgba(255, 240, 210, .6), 0 4px 0 #5a3518;
-  text-shadow: 0 2px 0 #6b3f22;
+  font-family: "Cinzel", serif; font-weight: 800; font-size: 17px; letter-spacing: 3px; text-transform: uppercase;
+  min-width: 240px; padding: 12px 18px;
+  color: #d8d0b8; background: linear-gradient(#22282c, #12161a);
+  border: 2px solid #4a4f57; outline: 2px solid #000;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
   cursor: pointer;
 }
-#menu button:hover { filter: brightness(1.08); }
-#menu button:active { transform: translateY(3px); box-shadow: inset 0 2px 0 rgba(255, 240, 210, .6), 0 1px 0 #5a3518; }
-#menu .help {
-  margin-top: 10px; font-size: 12px; font-weight: 700; line-height: 1.8; color: #5a3518;
-  background: rgba(255, 248, 235, .8); padding: 8px 14px; border-radius: 10px; max-width: 560px;
-}
+#menu button:hover, #menu button:active { color: #fff; border-color: #b0302a; background: linear-gradient(#2e1a18, #160c0c); }
+#menu .help { margin-top: 8px; font-size: 14px; color: #6a665c; }
 .hidden { display: none !important; }
+body.in-menu #touch { display: none !important; }
 
 /* ---------- controles de toque ---------- */
 #touch { display: none; }
@@ -87,6 +77,7 @@ canvas#game {
 @media (hover: none) and (pointer: coarse) {
   #touch { display: block; }
   #menu .help { display: none; }
+  #menu .hero { width: 154px; height: 204px; background-size: 1132px 220px; }
 
   @media (orientation: portrait) {
     #wrap { align-items: flex-start; padding-top: max(10vh, env(safe-area-inset-top)); }
@@ -95,15 +86,15 @@ canvas#game {
   #dpad {
     position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(26px, env(safe-area-inset-bottom));
     width: 150px; height: 150px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, .18), rgba(255, 255, 255, .06));
-    border: 3px solid rgba(255, 255, 255, .35);
+    background: radial-gradient(circle, rgba(40, 46, 52, .5), rgba(10, 12, 14, .35));
+    border: 3px solid rgba(110, 116, 126, .55);
     touch-action: none; z-index: 10;
   }
   #dpad .knob {
-    position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px;
+    position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #fff, #9dc0f5 45%, #5a7fd0);
-    border: 2px solid #2c3e7a; box-shadow: 0 3px 8px rgba(0, 0, 0, .3);
+    background: radial-gradient(circle at 35% 30%, #8a909a, #3d424a 60%, #1a1d21);
+    border: 2px solid #000; box-shadow: 0 3px 8px rgba(0, 0, 0, .5);
     pointer-events: none;
   }
 
@@ -112,20 +103,20 @@ canvas#game {
     width: 190px; height: 160px; z-index: 10;
   }
   #buttons button, #pauseBtn {
-    position: absolute; font: inherit; font-weight: 800; color: #fff;
-    border-radius: 50%; border: 2px solid rgba(40, 30, 60, .6);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
-    box-shadow: inset 0 3px 0 rgba(255, 255, 255, .45), 0 4px 10px rgba(0, 0, 0, .3);
-    touch-action: none; opacity: .88;
+    position: absolute; font-family: "Cinzel", serif; font-weight: 800; color: #e8e0c8;
+    border-radius: 50%; border: 2px solid #000; outline: 2px solid rgba(110, 116, 126, .6);
+    text-shadow: 0 2px 2px #000;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, .15), 0 4px 10px rgba(0, 0, 0, .5);
+    touch-action: none; opacity: .85;
   }
-  #buttons button.on, #pauseBtn.on { transform: scale(.92); filter: brightness(1.25); }
-  .b-jump { right: 0;    bottom: 0;    width: 80px; height: 80px; font-size: 24px; background: radial-gradient(circle at 35% 30%, #c8fbff, #3fc8e0 60%, #1d7e9a); }
-  .b-atk  { right: 90px; bottom: 16px; width: 68px; height: 68px; font-size: 24px; background: radial-gradient(circle at 35% 30%, #ffd0dc, #ff6f8f 60%, #c23a5c); }
-  .b-dash { right: 28px; bottom: 92px; width: 62px; height: 62px; font-size: 11px; background: radial-gradient(circle at 35% 30%, #ffe8c0, #ffb347 60%, #c4762a); }
+  #buttons button.on, #pauseBtn.on { transform: scale(.92); filter: brightness(1.4); }
+  .b-jump { right: 0;    bottom: 0;    width: 80px; height: 80px; font-size: 24px; background: radial-gradient(circle at 35% 30%, #4a6a74, #22343a 65%, #10181b); }
+  .b-atk  { right: 90px; bottom: 16px; width: 68px; height: 68px; font-size: 26px; background: radial-gradient(circle at 35% 30%, #8a3a32, #4a1a16 65%, #200a08); }
+  .b-dash { right: 28px; bottom: 92px; width: 62px; height: 62px; font-size: 11px; background: radial-gradient(circle at 35% 30%, #7a6040, #3a2c1c 65%, #1a120a); }
 
   #pauseBtn {
     position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; margin-left: -20px;
-    width: 40px; height: 40px; font-size: 12px; z-index: 10; border-radius: 10px;
-    background: linear-gradient(#9dc0f5, #5a7fd0);
+    width: 40px; height: 40px; font-size: 12px; z-index: 10; border-radius: 4px;
+    background: linear-gradient(#2a3036, #12161a);
   }
 }

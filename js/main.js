@@ -2,7 +2,7 @@
 //  JOGO: salas, itens, salvamento, menu e loop principal
 // =============================================================
 
-const SAVE_KEY = 'metroidvaniaex_save_v2';
+const SAVE_KEY = 'metroidvaniaex_save_v3';
 
 function newData() {
   return {
@@ -28,7 +28,7 @@ function roomSize(def) { return { w: def.map[0].length * TILE, h: def.map.length
 function enterRoom(id, px, py) {
   const def = ROOMS[id];
   const h = def.map.length, w = def.map[0].length;
-  const room = { id, def, w, h, pw: w * TILE, ph: h * TILE, tiles: [] };
+  const room = { id, def, w, h, pw: w * TILE, ph: h * TILE, tiles: [], art: getRoomArt(id) };
   G.room = room; G.roomId = id;
   G.enemies = []; G.items = []; G.particles = [];
 
@@ -39,9 +39,13 @@ function enterRoom(id, px, py) {
       const x = tx * TILE, y = ty * TILE, key = `${id}:${tx},${ty}`;
       switch (c) {
         case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
-        case 'W': G.enemies.push(new Walker(x + 2, y + 4)); break;
+        case 'W': G.enemies.push(new Walker(x + 1, y + TILE - 24)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
-        case 'P': G.items.push({ type: 'save', x, y, w: 16, h: 16 }); break;
+        case 'P': {                       // o braseiro fica apoiado no chão
+          let gy = ty; while (gy < h - 1 && !'#='.includes(def.map[gy + 1][tx])) gy++;
+          G.items.push({ type: 'save', x, y: gy * TILE, w: 16, h: 16 + (gy - ty) * TILE, top: y });
+          break;
+        }
         case 'D': case 'H': case '+':
           if (!G.data.collected[key]) G.items.push({ type: c, key, x: x + 3, y: y + 3, w: 10, h: 10 });
           break;
@@ -50,7 +54,6 @@ function enterRoom(id, px, py) {
     }
   }
 
-  buildRoomLayer(room);
   if (!G.data.visited[id]) { G.data.visited[id] = true; writeSave(); }
   G.roomTitle = { text: def.name, t: 2.5 };
   const p = G.player;
@@ -118,31 +121,32 @@ function updateItems(dt) {
         if (!G.saveLock) {
           G.saveLock = true;
           p.hp = G.data.maxHp;
-          G.data.save = { room: G.roomId, x: it.x + 3, y: it.y + TILE - p.h };
+          G.data.save = { room: G.roomId, x: it.x + 2, y: it.y + TILE - Player.H };
+          p.standUp();
           writeSave();
-          showBanner('Jogo salvo', 'A luz da lanterna aquece o coração. Vida restaurada!', '#ffd36b');
-          spawnParticles(it.x + 11, it.y + 7, 20, '#ffe9a0', { speed: 60, life: 0.6 });
+          showBanner('Braseiro aceso', 'Você descansa diante das chamas e recupera as forças. Progresso salvo.', '#ff9a3a');
+          spawnParticles(it.x + 8, it.y + 4, 24, '#ffb04a', { angle: -Math.PI / 2, spread: 1.6, speed: 70, life: 0.8 });
         }
         break;
       case 'heart':
-        if (p.hp < G.data.maxHp) { p.hp++; it.gone = true; spawnParticles(it.x + 4, it.y + 4, 8, '#ff4d6d', { speed: 40 }); }
+        if (p.hp < G.data.maxHp) { p.hp++; it.gone = true; spawnParticles(it.x + 4, it.y + 4, 10, '#ff4a5e', { speed: 40 }); }
         break;
       case 'D':
         collect(it, () => { G.data.abilities.doubleJump = true; },
-          'Pulo Duplo', 'Aperte PULAR de novo no ar para dar um segundo pulo. Agora dá pra subir o Poço!', '#5fe8ff');
+          'Salto Etéreo', 'Uma força antiga corre em suas pernas. Aperte PULAR no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.', '#7fe0ff');
         break;
       case 'H':
         collect(it, () => { G.data.abilities.dash = true; },
-          'Impulso', 'Aperte DASH (tecla C) para avançar rápido, até no ar. Use para atravessar buracos grandes.', '#ffb347');
+          'Rolamento', 'Aperte ROLAR (tecla C) para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.', '#ffb347');
         break;
       case '+':
         collect(it, () => { G.data.maxHp++; p.hp = G.data.maxHp; },
-          'Coração Extra', 'Sua vida máxima aumentou!', '#ff5a7a');
+          'Fragmento de Vida', 'O cristal pulsa como um coração. Sua vida máxima aumentou.', '#ff4a5e');
         break;
       case 'E':
         if (!G.data.endSeen) {
           G.data.endSeen = true; writeSave();
-          showBanner('Fim da demo', 'Você chegou ao fim... por enquanto! Novas áreas, chefes e poderes vêm aí.', '#9fd8ff');
+          showBanner('Fim da demo', 'O portal pulsa, mas ainda não se abre. As profundezas guardam mais segredos... em breve.', '#7fd0ff');
           G.banner.t = 7;
         }
         break;
@@ -165,15 +169,15 @@ function collect(it, apply, title, msg, color) {
 // ---------- morte ----------
 function playerDied() {
   G.state = 'dead';
-  G.deadT = 1.6;
+  G.deadT = 2.4;
   G.shake = 0.4;
   const p = G.player;
-  spawnParticles(p.x + p.w / 2, p.y + p.h / 2, 30, '#ffd0e0', { speed: 100, grav: 150, size: 3, life: 0.9 });
+  spawnParticles(p.x + p.w / 2, p.y + p.h / 2, 30, '#7a1414', { speed: 100, grav: 300, size: 3, life: 1 });
 }
 
 function respawnAtSave() {
   const p = G.player;
-  p.hp = G.data.maxHp; p.vx = 0; p.vy = 0; p.inv = 1; p.dashT = 0; p.stun = 0;
+  p.hp = G.data.maxHp; p.vx = 0; p.vy = 0; p.inv = 1; p.dashT = 0; p.stun = 0; p.standUp();
   enterRoom(G.data.save.room, G.data.save.x, G.data.save.y);
   G.state = 'play';
   G.fade = 0.5;
@@ -208,7 +212,7 @@ function update(dt) {
 
   for (const e of G.enemies) {
     e.update(dt);
-    if (!e.dead && overlaps(p, e)) p.hurt(1, e.x + e.w / 2);
+    if (!e.dead && p.dashT <= 0 && overlaps(p, e)) p.hurt(1, e.x + e.w / 2);
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 
@@ -243,7 +247,8 @@ function startGame(fresh) {
   G.fade = 0.6;
   G.saveLock = true;
   document.getElementById('menu').classList.add('hidden');
-  if (fresh) showBanner('Bem-vinda, Mia!', 'Explore o vale, encontre novos poderes e volte a lugares que antes eram impossíveis.', '#ff8f5a');
+  document.body.classList.remove('in-menu');
+  if (fresh) showBanner('As Catacumbas Esquecidas', 'Você desperta entre os mortos, com uma espada e nenhuma lembrança. Siga as tochas.', '#c8c0a8');
 }
 
 function setupMenu() {
@@ -257,6 +262,13 @@ function setupMenu() {
   });
 }
 
+// ---------- início ----------
 Input.bindTouch();
+buildSprites();
 setupMenu();
 requestAnimationFrame(frame);
+// pinta as salas aos poucos enquanto o menu está aberto (deixa as transições suaves)
+(function prebuild(ids) {
+  if (!ids.length) return;
+  setTimeout(() => { getRoomArt(ids[0]); prebuild(ids.slice(1)); }, 30);
+})(Object.keys(ROOMS));

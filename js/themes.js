@@ -1,58 +1,40 @@
 // =============================================================
-//  TEMAS VISUAIS DAS SALAS
-//  Estilo: cenário pintado, cores quentes e suaves (inspirado em
-//  RPGs online antigos) misturado com anime.
-//
-//  style: 'grass' (terra com grama), 'stone' (tijolos), 'wood' (madeira)
-//  bg:    'campo' (céu, morros, árvores), 'poco' (parede de pedra),
-//         'moinho' (campo dourado com moinho)
-//  ambient: partículas no ar — 'petal', 'leaf', 'firefly', 'dust'
+//  TEMAS DAS SALAS — paleta de cada área (pixel art sombria)
+//  stone: [rejunte, escuro, base, claro, brilho]
+//  moss:  [escuro, base, claro]
+//  sky:   cores do fundo (alto, baixo) — far/mid: silhuetas da caverna
+//  light: escuridão do ambiente (0 = claro, 1 = breu)
 // =============================================================
 
 const THEMES = {
-  campina: {
-    style: 'grass', bg: 'campo', ambient: 'petal', fence: true,
-    sky: ['#7cc8ff', '#dff4ff'], sun: '#fff6c8',
-    hills: ['#a9dca0', '#79c06f', '#5aa957'],
-    soil: '#ecbd62', soilDark: '#c98f3c', soilLight: '#f8d98f', outline: '#8a5a2a',
-    grass: '#72c44c', grassDark: '#3f8f34', grassLight: '#b2e67e',
-    flowers: ['#ffffff', '#ff9ac0', '#ffe066'],
-    map: '#72c44c',
+  catacumbas: {
+    stone: ['#0f1716', '#1d2a28', '#2a3a37', '#3b4f4a', '#55706a'],
+    moss: ['#2c4220', '#45642c', '#6a8f3c'],
+    sky: ['#0d1a1e', '#1d3236'], far: '#152529', mid: '#1b2e31', rim: '#3f6a6a', fog: '#2c4a4b',
+    light: 0.42, torches: 0.5, banners: '#5a1a1a', map: '#3f6a6a',
   },
-  poco: {
-    style: 'stone', bg: 'poco', ambient: 'dust',
-    sky: ['#2c4257', '#16222f'], sun: '#bfe8ff',
-    hills: ['#3a5268', '#2f4458', '#22323f'],
-    soil: '#9aa3b3', soilDark: '#646d7e', soilLight: '#c4cad8', outline: '#3c4352',
-    grass: '#6fae6a', grassDark: '#3f7444', grassLight: '#9fd69a',
-    flowers: ['#bfe8ff', '#d9c2ff', '#ffffff'],
-    map: '#7fb6d6',
+  correntes: {
+    stone: ['#0c1218', '#1a2430', '#26333f', '#364756', '#4d6274'],
+    moss: ['#22382a', '#38563c', '#557a50'],
+    sky: ['#0a1219', '#152634'], far: '#101d28', mid: '#16273a', rim: '#3e5f7a', fog: '#24384a',
+    light: 0.48, torches: 0.3, chains: true, map: '#4d7aa0',
   },
-  bosque: {
-    style: 'grass', bg: 'campo', ambient: 'firefly', mushrooms: true,
-    sky: ['#3e3b72', '#a77aa8'], sun: '#ffd0f0',
-    hills: ['#5b5a8c', '#3d5a68', '#2c4a4a'],
-    soil: '#94704f', soilDark: '#664a36', soilLight: '#b38f6c', outline: '#3e2a1e',
-    grass: '#4fa86c', grassDark: '#2c6e48', grassLight: '#86d6a0',
-    flowers: ['#d6b8ff', '#9fe8ff', '#ffffff'],
-    map: '#a786d6',
+  submersa: {
+    stone: ['#0c1510', '#18261c', '#233628', '#324a36', '#4a6a4a'],
+    moss: ['#2f4a1c', '#4c7026', '#76a03a'],
+    sky: ['#0a1612', '#163028'], far: '#11231c', mid: '#182f25', rim: '#4a8a6a', fog: '#2a4a3a',
+    light: 0.46, torches: 0.25, roots: true, map: '#4a8a5a',
   },
-  moinho: {
-    style: 'wood', bg: 'moinho', ambient: 'leaf',
-    sky: ['#ffbe7a', '#fff0d2'], sun: '#fffbe0',
-    hills: ['#efcb8a', '#d6a865', '#b9874e'],
-    soil: '#c08552', soilDark: '#87562f', soilLight: '#dfa775', outline: '#5a3518',
-    grass: '#94c94e', grassDark: '#5a8f2e', grassLight: '#c4ea84',
-    flowers: ['#ffe066', '#ffffff', '#ff8a5c'],
-    map: '#e6a35c',
+  torre: {
+    stone: ['#16100e', '#2a1f1a', '#3a2c24', '#4f3d31', '#6d5544'],
+    moss: ['#3a4020', '#566030', '#7a8440'],
+    sky: ['#120c10', '#2a1c22'], far: '#1c1418', mid: '#251a1e', rim: '#8a5a4a', fog: '#3a2a2a',
+    light: 0.4, torches: 0.6, banners: '#3a1a40', windows: true, map: '#a06a4a',
   },
-  ponte: {
-    style: 'grass', bg: 'campo', ambient: 'petal', fence: true,
-    sky: ['#ff8f8f', '#ffd9a8'], sun: '#fff2c0',
-    hills: ['#e09aa8', '#b8708c', '#8c5272'],
-    soil: '#dca06c', soilDark: '#a96c44', soilLight: '#f2c592', outline: '#6a3a22',
-    grass: '#7fc46a', grassDark: '#4a8a44', grassLight: '#b8e69a',
-    flowers: ['#ffffff', '#ffb0d0', '#ffe066'],
-    map: '#ff9a9a',
+  abismo: {
+    stone: ['#120e10', '#241c1e', '#33282a', '#463839', '#5e4c4a'],
+    moss: ['#33381e', '#4c522a', '#6c7438'],
+    sky: ['#160a0c', '#3a1814'], far: '#200f10', mid: '#2a1414', rim: '#c0502a', fog: '#4a2018',
+    light: 0.36, torches: 0.35, embers: true, map: '#c0502a',
   },
 };

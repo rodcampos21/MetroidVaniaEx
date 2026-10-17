@@ -4,9 +4,7 @@
 
 const TILE = 16;
 const VIEW_W = 320, VIEW_H = 192;   // tamanho da tela do jogo (em pixels do jogo)
-// resolução interna: acompanha o tamanho/densidade da tela (deixa a arte nítida)
-const SCALE = Math.max(2, Math.min(4, Math.ceil(
-  Math.min(innerWidth, innerHeight * VIEW_W / VIEW_H) * (window.devicePixelRatio || 1) / VIEW_W)));
+const SCALE = 4;                     // pixels da tela por unidade do jogo (= densidade da arte)
 
 // Física (pixels por segundo)
 const PHYS = {
@@ -15,8 +13,8 @@ const PHYS = {
   MAX_FALL: 300,
   JUMP: 320,          // pulo normal  (~3,5 blocos de altura)
   DOUBLE_JUMP: 300,   // segundo pulo
-  DASH_SPEED: 320,
-  DASH_TIME: 0.2,
+  DASH_SPEED: 240,     // rolamento
+  DASH_TIME: 0.3,
 };
 
 // Estado global do jogo
