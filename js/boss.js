@@ -7,18 +7,18 @@
 // =============================================================
 
 const BOSS = {
-  W: 30, H: 44, HP: 30,
+  W: 30, H: 44, HP: 25,
   WALK: 32, WALK2: 44,
   SMASH_RANGE: 52,                    // distância para tentar a guitarrada
   SMASH_REACH: 64, SMASH_DMG: 2,      // alcance e dano do impacto
-  NOTE_SPEED: 100, NOTE_SPEED2: 122, NOTE_TURN: 1.3, NOTE_LIFE: 3.6,
+  NOTE_SPEED: 86, NOTE_SPEED2: 104, NOTE_TURN: 0.95, NOTE_LIFE: 3.6,
   TOUCH_DMG: 1,
 };
 
 // sequências: [quadro, duração] — a guitarrada e o riff
 // morte: cambaleia → desaba → ajoelha → cai → de bruços → final (o corpo fica no chão)
 const DEATH_SEQ = [['death4', 0.4], ['death0', 0.4], ['death5', 0.5], ['death1', 0.3], ['death6', 0.25], ['death2', 0.45], ['death3', 99]];
-const SMASH_SEQ = [['smash0', 0.5], ['smash1', 0.13], ['smash2', 0.38], ['smash3', 0.22], ['smash4', 0.34], ['smash5', 0.26]];
+const SMASH_SEQ = [['smash0', 0.62], ['smash1', 0.13], ['smash2', 0.38], ['smash3', 0.22], ['smash4', 0.34], ['smash5', 0.26]];
 
 class GuitaristBoss extends Enemy {
   constructor(x, y, corpse) {
@@ -72,7 +72,7 @@ class GuitaristBoss extends Enemy {
   play(seq) { this.seq = seq; this.si = 0; this.st = 0; this.frame = seq[0][0]; }
   stepSeq(dt) {                               // avança a sequência; devolve true quando acaba
     const [, d] = this.seq[this.si];
-    const k = this.phase2 && this.state === 'smash' && this.si === 0 ? 0.75 : 1;   // na fase 2 prepara mais rápido
+    const k = this.phase2 && this.state === 'smash' && this.si === 0 ? 0.85 : 1;   // na fase 2 prepara mais rápido
     if (this.st >= d * k) {
       this.si++; this.st = 0;
       if (this.si >= this.seq.length) return true;
@@ -127,7 +127,7 @@ class GuitaristBoss extends Enemy {
         if (this.walkT > (this.phase2 ? 2.4 : 3.2) || (adx > 150 && this.walkT > 0.8)) { this.walkT = 0; this.startRiff(); }
         break;
       case 'smash':
-        if (this.stepSeq(dt)) { this.smashCd = this.phase2 ? 0.6 : 1.1; this.choose(adx, true); }
+        if (this.stepSeq(dt)) { this.smashCd = this.phase2 ? 0.9 : 1.4; this.choose(adx, true); }
         break;
       case 'riff': this.updateRiff(dt, adx); break;
       case 'dying': {
@@ -191,7 +191,7 @@ class GuitaristBoss extends Enemy {
         break;
       case 'final': this.frame = 'riff6'; if (this.st > 0.35) { this.riffStep = 'trans'; this.st = 0; } break;
       case 'trans': this.frame = 'riff7'; if (this.st > 0.3) { this.riffStep = 'recover'; this.st = 0; } break;
-      case 'recover': this.frame = 'riff5'; if (this.st > (this.phase2 ? 0.35 : 0.6)) { this.set('walk'); this.walkT = 0; } break;
+      case 'recover': this.frame = 'riff5'; if (this.st > (this.phase2 ? 0.55 : 0.8)) { this.set('walk'); this.walkT = 0; } break;
     }
   }
   fireVolley(n, k) {
@@ -242,7 +242,7 @@ class SonicNote extends Enemy {
     const p = G.player;
     const want = Math.atan2(p.y + p.h / 2 - (this.y + 5), p.x + p.w / 2 - (this.x + 5));
     let d = want - this.ang; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2;
-    if (this.t < 1.6) this.ang += Math.max(-BOSS.NOTE_TURN * dt, Math.min(BOSS.NOTE_TURN * dt, d));
+    if (this.t < 1.25) this.ang += Math.max(-BOSS.NOTE_TURN * dt, Math.min(BOSS.NOTE_TURN * dt, d));
     this.x += Math.cos(this.ang) * this.speed * dt;
     this.y += Math.sin(this.ang) * this.speed * dt;
     this.life -= dt;
@@ -255,7 +255,7 @@ class SonicNote extends Enemy {
 class Shockwave extends Enemy {
   constructor(x, floorY, dir, big) {
     super(x - 6, floorY - 12, 12, 12, 99);
-    this.dir = dir; this.speed = big ? 150 : 120; this.life = big ? 0.9 : 0.6; this.color = '#ff7a30';
+    this.dir = dir; this.speed = big ? 130 : 105; this.life = big ? 0.9 : 0.6; this.color = '#ff7a30';
   }
   touches(p) { return overlaps(p, this); }
   onHitPlayer() {}

@@ -53,7 +53,11 @@ const Input = (() => {
     if (!pad) return;
     const knob = pad.querySelector('.knob');
     let active = null;
+    const arrows = {};
+    pad.querySelectorAll('.arr').forEach(a => { arrows[a.dataset.dir] = a; });
     const setDirs = (l, r, u, d) => {
+      const st = { left: l, right: r, up: u, down: d };
+      for (const k in arrows) arrows[k].classList.toggle('on', !!st[k]);
       l ? press('left') : release('left');
       r ? press('right') : release('right');
       u ? press('up') : release('up');
@@ -63,8 +67,17 @@ const Input = (() => {
       const rect = pad.getBoundingClientRect();
       const dx = e.clientX - (rect.left + rect.width / 2);
       const dy = e.clientY - (rect.top + rect.height / 2);
-      const dz = rect.width * 0.14;
-      setDirs(dx < -dz, dx > dz, dy < -rect.height * 0.28, dy > rect.height * 0.28);
+      const dead = rect.width * 0.12, len0 = Math.hypot(dx, dy);
+      if (len0 < dead) setDirs(false, false, false, false);
+      else {
+        // 8 setores: horizontal tem prioridade (fica mais fácil andar sem agachar sem querer)
+        const a = Math.atan2(dy, dx) * 180 / Math.PI;      // 0 = direita, 90 = baixo
+        const ax = Math.abs(a);
+        const right = ax < 60, left = ax > 120;
+        const down = a > 50 && a < 130 && len0 > rect.width * 0.2;
+        const up = a < -30 && a > -150 && len0 > rect.width * 0.2;
+        setDirs(left, right, up, down);
+      }
       const max = rect.width * 0.3, len = Math.hypot(dx, dy) || 1, k = Math.min(1, max / len);
       if (knob) knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
     };

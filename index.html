@@ -46,8 +46,8 @@
       <div class="ctl-touch">
         <div class="pad-demo">
           <div class="side">
-            <div class="mini dpad">✥</div>
-            <p><b>Direcional</b> — arraste para andar<br>para baixo: agachar · para cima: escalar</p>
+            <div class="mini dpad demo"><span class="arr up"></span><span class="arr down"></span><span class="arr left"></span><span class="arr right"></span><i class="nub"></i></div>
+            <p><b>Direcional</b> — arraste o analógico para a seta que quiser<br>para baixo: agachar · para cima: escalar</p>
           </div>
           <div class="side right">
             <div class="mini-grid">
@@ -74,7 +74,11 @@
 
   <!-- Controles de toque (aparecem só em celular/tablet) -->
   <div id="touch">
-    <div id="dpad"><div class="knob"></div></div>
+    <div id="dpad">
+      <span class="arr up" data-dir="up"></span><span class="arr down" data-dir="down"></span>
+      <span class="arr left" data-dir="left"></span><span class="arr right" data-dir="right"></span>
+      <div class="knob"></div>
+    </div>
     <div id="buttons">
       <button data-act="sprint" class="b-sprint">DASH</button>
       <button data-act="dash" class="b-dash">ROLAR</button>

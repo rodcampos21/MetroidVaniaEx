@@ -287,13 +287,13 @@ class Enemy {
 
 // LOBISOMEM: patrulha; ao ver o herói, uiva, avança num dash e ataca com garradas
 const WOLF = {
-  W: 22, H: 34, HP: 6,
-  PATROL: 24, CHASE: 62,
+  W: 22, H: 34, HP: 5,
+  PATROL: 24, CHASE: 56,
   SIGHT_X: 150, SIGHT_Y: 34,          // alcance da visão
-  ALERT: 0.5,                         // uivo antes de agir
-  DASH_PREP: 0.28, DASH_SPEED: 290, DASH_TIME: 0.5, DASH_CD: 2.4,
+  ALERT: 0.65,                        // uivo antes de agir
+  DASH_PREP: 0.4, DASH_SPEED: 255, DASH_TIME: 0.5, DASH_CD: 3.2,
   CLAW_RANGE: 30,
-  WIND: 0.34, WIND2: 0.16, STRIKE: 0.14, RECOVER: 0.6,
+  WIND: 0.42, WIND2: 0.22, STRIKE: 0.14, RECOVER: 0.85,
 };
 class Werewolf extends Enemy {
   constructor(x, y) {

@@ -29,14 +29,14 @@ canvas#game {
 }
 #menu::before {                    /* preenche as sobras da tela com a própria arte desfocada */
   content: ""; position: absolute; inset: -40px;
-  background: url(../assets/menu_bg.jpg?v=20261017151328) center / cover no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017153103) center / cover no-repeat;
   filter: blur(18px) brightness(.45);
 }
 #menu .stage {
   position: relative; container-type: inline-size;
   width: min(100vw, calc(100dvh * 2576 / 1405));
   aspect-ratio: 2576 / 1405;
-  background: url(../assets/menu_bg.jpg?v=20261017151328) center / 100% 100% no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017153103) center / 100% 100% no-repeat;
   box-shadow: 0 0 60px rgba(0, 0, 0, .7);
 }
 /* brilho da joia da espada */
@@ -68,7 +68,7 @@ canvas#game {
 }
 #menu .item::before {             /* faixa vermelha com o dragão (só na opção selecionada) */
   content: ""; position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 540 / 145;
-  background: url(../assets/menu_band.png?v=20261017151328) 0 0 / 100% 100% no-repeat;
+  background: url(../assets/menu_band.png?v=20261017153103) 0 0 / 100% 100% no-repeat;
   opacity: 0; transition: opacity .15s; z-index: -1;
 }
 #menu .item.sel { color: #f0dfcc; }
@@ -98,6 +98,25 @@ body.in-menu #touch { display: none !important; }
     border: 3px solid rgba(110, 116, 126, .55);
     touch-action: none; z-index: 10;
   }
+  /* cruz direcional por trás do analógico */
+  #dpad::before, #dpad::after {
+    content: ""; position: absolute; left: 50%; top: 50%; pointer-events: none;
+    background: rgba(20, 23, 27, .55); border: 2px solid rgba(110, 116, 126, .35); border-radius: 10px;
+  }
+  #dpad::before { width: 50px; height: 132px; margin: -66px 0 0 -25px; }
+  #dpad::after  { width: 132px; height: 50px; margin: -25px 0 0 -66px; }
+  #dpad .arr {
+    position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 1; pointer-events: none;
+    border: 11px solid transparent; opacity: .6; transition: opacity .08s, filter .08s;
+  }
+  #dpad .arr.up    { margin: -66px 0 0 -11px; border-bottom: 14px solid #cfc6b0; border-top-width: 0; }
+  #dpad .arr.down  { margin: 52px 0 0 -11px;  border-top: 14px solid #cfc6b0; border-bottom-width: 0; }
+  #dpad .arr.left  { margin: -11px 0 0 -66px; border-right: 14px solid #cfc6b0; border-left-width: 0; }
+  #dpad .arr.right { margin: -11px 0 0 52px;  border-left: 14px solid #cfc6b0; border-right-width: 0; }
+  #dpad .arr.on { opacity: 1; filter: drop-shadow(0 0 6px #ffcf70) brightness(1.3); border-color: transparent; }
+  #dpad .arr.up.on { border-bottom-color: #ffd890; } #dpad .arr.down.on { border-top-color: #ffd890; }
+  #dpad .arr.left.on { border-right-color: #ffd890; } #dpad .arr.right.on { border-left-color: #ffd890; }
+  #dpad .knob { z-index: 2; transition: transform .05s; }
   #dpad .knob {
     position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px;
     border-radius: 50%;
@@ -192,3 +211,13 @@ body.in-menu #touch { display: none !important; }
 #controls .ctl-touch .row { grid-template-columns: 46px 90px 1fr; }
 #controls .keys { display: flex; gap: 6px; }
 @media (max-width: 560px) { #controls .row { grid-template-columns: 110px 90px 1fr; font-size: 14px; } }
+
+/* demonstração do direcional na tela de controles */
+#controls .mini.dpad.demo { position: relative; background: radial-gradient(circle, #2a2f35, #121417); }
+#controls .mini.dpad.demo .arr { position: absolute; left: 50%; top: 50%; width: 0; height: 0; border: 6px solid transparent; }
+#controls .mini.dpad.demo .arr.up    { margin: -29px 0 0 -6px; border-bottom: 8px solid #cfc6b0; border-top-width: 0; }
+#controls .mini.dpad.demo .arr.down  { margin: 21px 0 0 -6px;  border-top: 8px solid #cfc6b0; border-bottom-width: 0; }
+#controls .mini.dpad.demo .arr.left  { margin: -6px 0 0 -29px; border-right: 8px solid #cfc6b0; border-left-width: 0; }
+#controls .mini.dpad.demo .arr.right { margin: -6px 0 0 21px;  border-left: 8px solid #cfc6b0; border-right-width: 0; }
+#controls .mini.dpad.demo .nub { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #8a909a, #3d424a 60%, #1a1d21); border: 2px solid #000; }
