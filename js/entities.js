@@ -4,7 +4,7 @@
 
 class Player {
   constructor() {
-    this.x = 0; this.y = 0; this.w = 10; this.h = 14;
+    this.x = 0; this.y = 0; this.w = 10; this.h = 20;
     this.vx = 0; this.vy = 0;
     this.onGround = false;
     this.facing = 1;
@@ -18,6 +18,7 @@ class Player {
     this.hp = 5;
     this.safe = { x: 0, y: 0 };
     this.anim = 0;
+    this.trail = [];       // imagens fantasma do dash
   }
 
   attackBox() {
@@ -44,9 +45,11 @@ class Player {
       this.dashT -= dt;
       this.vx = this.facing * PHYS.DASH_SPEED;
       this.vy = 0;
-      if (Math.random() < 0.7)
-        G.particles.push({ x: this.x + this.w / 2, y: this.y + 3 + Math.random() * 10, vx: 0, vy: 0,
-          life: 0.25, max: 0.25, color: '#ffc77a', size: 3, grav: 0 });
+      if (Math.floor(this.dashT * 60) % 3 === 0)
+        this.trail.push({ x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.25 });
+      if (Math.random() < 0.6)
+        G.particles.push({ x: this.x + this.w / 2, y: this.y + 4 + Math.random() * 14, vx: -this.facing * 20, vy: 0,
+          life: 0.3, max: 0.3, color: '#ffe1a8', size: 2, grav: 0 });
       if (this.dashT <= 0) this.vx = this.facing * PHYS.RUN;
     } else {
       // ---- andar ----
@@ -61,7 +64,7 @@ class Player {
       } else if (this.jumpBuf > 0 && this.stun <= 0) {
         if (this.onGround || this.coyote > 0) {
           this.vy = -PHYS.JUMP; this.jumpBuf = 0; this.coyote = 0; this.jumpCut = true;
-          spawnParticles(this.x + this.w / 2, this.y + this.h, 5, '#cfd6ff', { angle: -Math.PI / 2, spread: 2.4, speed: 40, life: 0.3 });
+          spawnParticles(this.x + this.w / 2, this.y + this.h, 5, '#fff6e0', { angle: -Math.PI / 2, spread: 2.4, speed: 40, life: 0.3 });
         } else if (ab.doubleJump && this.airJumps > 0) {
           this.airJumps--; this.vy = -PHYS.DOUBLE_JUMP; this.jumpBuf = 0; this.jumpCut = true;
           spawnParticles(this.x + this.w / 2, this.y + this.h, 12, '#7df9ff', { angle: Math.PI / 2, spread: 2.6, speed: 70, life: 0.35 });
@@ -85,6 +88,9 @@ class Player {
     }
     if (this.atkT > 0) { this.atkT -= dt; this.doAttack(); }
 
+    for (const gh of this.trail) gh.life -= dt;
+    this.trail = this.trail.filter(gh => gh.life > 0);
+
     moveBody(this, dt);
     if (this.hitWallX && this.dashT > 0) this.dashT = 0;
 
@@ -102,14 +108,14 @@ class Player {
       this.hitSet.add(e);
       e.hurt(1, this.facing);
     }
-    // quebrar blocos
+    // quebrar caixotes
     const x0 = Math.floor(box.x / TILE), x1 = Math.floor((box.x + box.w) / TILE);
     const y0 = Math.floor(box.y / TILE), y1 = Math.floor((box.y + box.h) / TILE);
     for (let ty = y0; ty <= y1; ty++)
       for (let tx = x0; tx <= x1; tx++)
         if (tileAt(tx, ty) === 'B') {
           setTile(tx, ty, '.');
-          spawnParticles(tx * TILE + 8, ty * TILE + 8, 14, '#a07850', { speed: 90, grav: 400, size: 3, life: 0.6 });
+          spawnParticles(tx * TILE + 8, ty * TILE + 8, 14, '#d39a5a', { speed: 90, grav: 400, size: 3, life: 0.6 });
           G.shake = Math.max(G.shake, 0.1);
         }
   }
@@ -166,9 +172,9 @@ class Enemy {
   }
 }
 
-// Anda de um lado pro outro e vira nas paredes e bordas
+// COGUMELINHO: anda de um lado pro outro e vira nas paredes e bordas
 class Walker extends Enemy {
-  constructor(x, y) { super(x, y, 12, 12, 3); this.dir = -1; this.color = '#e0607a'; }
+  constructor(x, y) { super(x, y, 12, 12, 3); this.dir = -1; this.color = '#ef5a64'; }
   update(dt) {
     this.t += dt; this.flash -= dt;
     if (this.kb > 0) { this.kb -= dt; this.vx = approach(this.vx, 0, 400 * dt); }
@@ -185,9 +191,9 @@ class Walker extends Enemy {
   }
 }
 
-// Morcego: flutua e persegue o jogador quando ele chega perto (atravessa paredes)
+// PLUMITO: flutua e persegue o jogador quando ele chega perto (atravessa paredes)
 class Flyer extends Enemy {
-  constructor(x, y) { super(x, y, 12, 10, 2); this.color = '#b07cff'; }
+  constructor(x, y) { super(x, y, 12, 10, 2); this.color = '#c9a8ff'; }
   update(dt) {
     this.t += dt; this.flash -= dt;
     const p = G.player;

@@ -4,7 +4,9 @@
 
 const TILE = 16;
 const VIEW_W = 320, VIEW_H = 192;   // tamanho da tela do jogo (em pixels do jogo)
-const SCALE = 3;                     // resolução interna (deixa o texto nítido)
+// resolução interna: acompanha o tamanho/densidade da tela (deixa a arte nítida)
+const SCALE = Math.max(2, Math.min(4, Math.ceil(
+  Math.min(innerWidth, innerHeight * VIEW_W / VIEW_H) * (window.devicePixelRatio || 1) / VIEW_W)));
 
 // Física (pixels por segundo)
 const PHYS = {
@@ -27,6 +29,7 @@ const G = {
   enemies: [],
   items: [],
   particles: [],
+  ambient: [],        // pétalas, folhas, vaga-lumes (enfeite de tela)
   cam: { x: 0, y: 0 },
   shake: 0,
   banner: null,

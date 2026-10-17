@@ -1,4 +1,4 @@
-# MetroidVania EX — As Cavernas Esquecidas
+# MetroidVania EX — A Jornada de Mia
 
 Metroidvania em HTML/JavaScript puro (sem bibliotecas), feito com a ajuda do Claude.
 Funciona no navegador do computador e do celular (com controles de toque).
@@ -17,13 +17,15 @@ Abra o `index.html` no navegador — ou, se o GitHub Pages estiver ativado, aces
 | Descer da plataforma de madeira | ↓ + pular | direcional pra baixo + ▲ |
 | Pausar | Esc / P | II |
 
-O jogo salva sozinho ao tocar nos **cristais verdes** (que também recuperam a vida) e ao pegar itens.
+O jogo salva sozinho ao tocar nas **lanternas** (que também recuperam a vida) e ao pegar itens.
 
 ## O que já existe
 
-- 5 salas conectadas: Entrada da Caverna, O Poço, Galeria Afundada, Torre dos Ventos e Ponte Quebrada
+- Visual pintado e fofo (estilo RPG online antigo + anime), todo desenhado por código
+- Mia, a heroína garota-gato, e os inimigos Cogumelinho e Plumito
+- 5 salas conectadas: Campina do Vilarejo, Poço dos Desejos, Bosque Sussurrante, Moinho dos Ventos e Ponte do Pôr do Sol
 - Poderes que abrem caminhos: **Pulo Duplo** (para subir o Poço) e **Impulso/Dash** (para atravessar a ponte)
-- Inimigos: andarilho e morcego · espinhos · blocos quebráveis · coração extra
+- Espinhos · caixotes quebráveis · coração extra
 - Minimapa das salas visitadas, vida em corações, salvamento automático
 
 ## Estrutura
@@ -32,6 +34,8 @@ O jogo salva sozinho ao tocar nos **cristais verdes** (que também recuperam a v
 index.html        página do jogo e controles de toque
 css/style.css     visual da página e dos botões
 js/rooms.js       MAPA: as salas desenhadas com letras (fácil de editar!)
+js/themes.js      cores e clima de cada sala
+js/art.js         desenho da Mia, inimigos, itens e objetos de cenário
 js/input.js       teclado e toque
 js/engine.js      física, colisão e partículas
 js/entities.js    jogador e inimigos

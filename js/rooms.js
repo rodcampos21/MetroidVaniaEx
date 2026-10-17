@@ -8,17 +8,17 @@
 //  Legenda dos blocos:
 //   #  parede / chão          =  plataforma (atravessa por baixo)
 //   ^  espinhos               B  bloco quebrável (ataque)
-//   @  início do jogador      P  ponto de salvamento
-//   W  inimigo andarilho      F  inimigo voador (morcego)
+//   @  início do jogador      P  lanterna de salvamento
+//   W  inimigo: Cogumelinho   F  inimigo voador: Plumito
 //   D  item: Pulo Duplo       H  item: Impulso (dash)
 //   +  item: Coração extra    E  fim da demo
 // =============================================================
 
 const ROOMS = {
   entrada: {
-    name: 'Entrada da Caverna',
+    name: 'Campina do Vilarejo',
     wx: 0, wy: 0,
-    bg: ['#1d2340', '#0b0e1c'], wall: '#3a4170', edge: '#8fa0ff', map: [
+    theme: 'campina', map: [
       '########################################',
       '#......................................#',
       '#......................................#',
@@ -35,9 +35,9 @@ const ROOMS = {
   },
 
   poco: {
-    name: 'O Poço',
+    name: 'Poço dos Desejos',
     wx: 2, wy: 0,
-    bg: ['#162a33', '#081217'], wall: '#2f5560', edge: '#7fe0d0', map: [
+    theme: 'poco', map: [
       '########....########',
       '#..................#',
       '#..................#',
@@ -66,9 +66,9 @@ const ROOMS = {
   },
 
   galeria: {
-    name: 'Galeria Afundada',
+    name: 'Bosque Sussurrante',
     wx: 0, wy: 1,
-    bg: ['#2a1a33', '#100914'], wall: '#563a66', edge: '#e09bff', map: [
+    theme: 'bosque', map: [
       '########################################',
       '#......................................#',
       '#......................................#',
@@ -85,13 +85,13 @@ const ROOMS = {
   },
 
   torre: {
-    name: 'Torre dos Ventos',
+    name: 'Moinho dos Ventos',
     wx: 2, wy: -1,
-    bg: ['#33261a', '#140e08'], wall: '#6b4f33', edge: '#ffc77a', map: [
+    theme: 'moinho', map: [
       '########################################',
       '#......................................#',
-      '#..H...................................#',
-      '#####..................................#',
+      '#......H...............................#',
+      '########...............................#',
       '#.........=====.........F..............#',
       '#......................................#',
       '#......................................#',
@@ -104,9 +104,9 @@ const ROOMS = {
   },
 
   ponte: {
-    name: 'Ponte Quebrada',
+    name: 'Ponte do Pôr do Sol',
     wx: 4, wy: -1,
-    bg: ['#331a22', '#14080c'], wall: '#6b3344', edge: '#ff8fa8', map: [
+    theme: 'ponte', map: [
       '########################################',
       '#......................................#',
       '#......................................#',

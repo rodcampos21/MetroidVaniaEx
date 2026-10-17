@@ -2,7 +2,7 @@
 //  JOGO: salas, itens, salvamento, menu e loop principal
 // =============================================================
 
-const SAVE_KEY = 'metroidvaniaex_save_v1';
+const SAVE_KEY = 'metroidvaniaex_save_v2';
 
 function newData() {
   return {
@@ -38,7 +38,7 @@ function enterRoom(id, px, py) {
       room.tiles.push('#=^B'.includes(c) ? c : '.');
       const x = tx * TILE, y = ty * TILE, key = `${id}:${tx},${ty}`;
       switch (c) {
-        case '@': if (px == null) { px = x + 3; py = y + 2; } break;
+        case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
         case 'W': G.enemies.push(new Walker(x + 2, y + 4)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
         case 'P': G.items.push({ type: 'save', x, y, w: 16, h: 16 }); break;
@@ -50,6 +50,7 @@ function enterRoom(id, px, py) {
     }
   }
 
+  buildRoomLayer(room);
   if (!G.data.visited[id]) { G.data.visited[id] = true; writeSave(); }
   G.roomTitle = { text: def.name, t: 2.5 };
   const p = G.player;
@@ -117,10 +118,10 @@ function updateItems(dt) {
         if (!G.saveLock) {
           G.saveLock = true;
           p.hp = G.data.maxHp;
-          G.data.save = { room: G.roomId, x: it.x + 3, y: it.y + 2 };
+          G.data.save = { room: G.roomId, x: it.x + 3, y: it.y + TILE - p.h };
           writeSave();
-          showBanner('JOGO SALVO', 'Vida restaurada.', '#7dffb0');
-          spawnParticles(it.x + 8, it.y + 6, 20, '#b8ffd6', { speed: 60, life: 0.6 });
+          showBanner('Jogo salvo', 'A luz da lanterna aquece o coração. Vida restaurada!', '#ffd36b');
+          spawnParticles(it.x + 11, it.y + 7, 20, '#ffe9a0', { speed: 60, life: 0.6 });
         }
         break;
       case 'heart':
@@ -128,20 +129,20 @@ function updateItems(dt) {
         break;
       case 'D':
         collect(it, () => { G.data.abilities.doubleJump = true; },
-          'PULO DUPLO', 'Aperte PULAR de novo no ar para dar um segundo pulo. Agora dá pra subir o Poço!', '#7df9ff');
+          'Pulo Duplo', 'Aperte PULAR de novo no ar para dar um segundo pulo. Agora dá pra subir o Poço!', '#5fe8ff');
         break;
       case 'H':
         collect(it, () => { G.data.abilities.dash = true; },
-          'IMPULSO', 'Aperte DASH (tecla C) para avançar rápido, até no ar. Use para atravessar buracos grandes.', '#ffb347');
+          'Impulso', 'Aperte DASH (tecla C) para avançar rápido, até no ar. Use para atravessar buracos grandes.', '#ffb347');
         break;
       case '+':
         collect(it, () => { G.data.maxHp++; p.hp = G.data.maxHp; },
-          'CORAÇÃO EXTRA', 'Sua vida máxima aumentou!', '#ff5a7a');
+          'Coração Extra', 'Sua vida máxima aumentou!', '#ff5a7a');
         break;
       case 'E':
         if (!G.data.endSeen) {
           G.data.endSeen = true; writeSave();
-          showBanner('FIM DA DEMO', 'Você chegou ao fim... por enquanto! Novas áreas, chefes e poderes vêm aí.', '#fff6a0');
+          showBanner('Fim da demo', 'Você chegou ao fim... por enquanto! Novas áreas, chefes e poderes vêm aí.', '#9fd8ff');
           G.banner.t = 7;
         }
         break;
@@ -167,7 +168,7 @@ function playerDied() {
   G.deadT = 1.6;
   G.shake = 0.4;
   const p = G.player;
-  spawnParticles(p.x + p.w / 2, p.y + p.h / 2, 30, '#3fa9f5', { speed: 100, grav: 150, size: 3, life: 0.9 });
+  spawnParticles(p.x + p.w / 2, p.y + p.h / 2, 30, '#ffd0e0', { speed: 100, grav: 150, size: 3, life: 0.9 });
 }
 
 function respawnAtSave() {
@@ -192,6 +193,7 @@ function update(dt) {
   if (G.banner) G.banner.t -= dt;
   if (G.roomTitle) G.roomTitle.t -= dt;
   updateParticles(dt);
+  updateAmbient(dt);
 
   if (G.state === 'dead') {
     G.deadT -= dt;
@@ -241,7 +243,7 @@ function startGame(fresh) {
   G.fade = 0.6;
   G.saveLock = true;
   document.getElementById('menu').classList.add('hidden');
-  if (fresh) showBanner('BEM-VINDO', 'Explore a caverna, encontre novos poderes e volte a lugares que antes eram impossíveis.', '#8fa0ff');
+  if (fresh) showBanner('Bem-vinda, Mia!', 'Explore o vale, encontre novos poderes e volte a lugares que antes eram impossíveis.', '#ff8f5a');
 }
 
 function setupMenu() {
