@@ -17,8 +17,8 @@ const theme = () => THEMES[G.room.def.theme];
 // HUD: painel do retrato e a parte vermelha da barra (recortados da arte do autor)
 const HUD = { panel: new Image(), fill: new Image(), lagImg: null, lag: null,
               track: { x0: 21, x1: 142, y0: 146, y1: 155 } };
-HUD.panel.src = 'assets/hud_panel.png';
-HUD.fill.src = 'assets/hud_fill.png';
+HUD.panel.src = 'assets/hud_panel.png?v=' + ASSET_V;
+HUD.fill.src = 'assets/hud_fill.png?v=' + ASSET_V;
 HUD.fill.onload = () => {        // versão clara para o "dano recente"
   const c = document.createElement('canvas'); c.width = HUD.fill.width; c.height = HUD.fill.height;
   const g = c.getContext('2d'); g.drawImage(HUD.fill, 0, 0);

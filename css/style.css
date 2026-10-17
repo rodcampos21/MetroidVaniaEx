@@ -32,7 +32,7 @@ canvas#game {
 }
 #menu .hero {
   width: 206px; height: 272px;
-  background: url(../assets/hero.png) 0 0 / 2982px 294px no-repeat;
+  background: url(../assets/hero.png?v=202610170237) 0 0 / 2982px 294px no-repeat;
   image-rendering: pixelated;
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .8)) brightness(.95);
   animation: breathe 2.6s ease-in-out infinite;

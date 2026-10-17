@@ -57,3 +57,8 @@ js/main.js        salas, itens, salvamento e loop do jogo
 Em `js/rooms.js`, cada sala é uma lista de linhas de texto. Uma tela tem 20 x 12 blocos,
 e a sala é posicionada no mundo com `wx`/`wy` (em telas). Para ligar duas salas, deixe uma
 abertura (`.`) nas paredes que se encostam. A legenda das letras está no topo do arquivo.
+
+
+### Publicando uma atualização
+
+Antes de cada commit, rode `./atualizar_versao.sh`. Ele marca os arquivos com uma versão nova para o navegador baixar a atualização em vez de usar a cópia antiga em cache.
