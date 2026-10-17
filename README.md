@@ -26,7 +26,7 @@ O jogo salva sozinho ao tocar nos **braseiros** (que também recuperam a vida) e
 
 - Pixel art sombria: masmorras de pedra com musgo, tochas, correntes, estandartes, névoa e luz dinâmica
 - Herói com o sprite do autor, sem a borda branca: parado, corrida em 6 quadros, pulo, combo de espada (ergue → corta para baixo → corta para cima), agachado, estocada, ferido, rolamento, dash e escalada
-- Inimigos: Esqueleto com espada e escudo, Morcego
+- Inimigos: **Lobisomem** (arte do autor) — patrulha, uiva ao ver o herói, avança num dash e ataca com combo de garradas — e Morcego
 - 6 salas: Catacumbas Esquecidas, Poço das Correntes, Galeria Submersa, Torre Arruinada, Ponte sobre o Abismo e Torre do Vigia (só com escalada)
 - Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo), **Rolamento** (rola sem levar dano) e **Garras do Vigia** (escalar e saltar de paredes)
 - Estacas de ferro · blocos rachados · Fragmento de Vida
@@ -41,6 +41,7 @@ js/rooms.js       MAPA: as salas desenhadas com letras (fácil de editar!)
 assets/hero.png   sprite do herói (recortado da folha de sprites)
 assets/hud_*.png  retrato com moldura e barra de vida
 assets/menu_*     arte do menu principal (fundo e faixa de seleção)
+assets/werewolf.png  12 quadros de caminhada do lobisomem (js/werewolf_sprite.js)
 js/hero.js        posições de cada pose dentro do hero.png
 js/themes.js      paleta e clima de cada sala
 js/pixel.js       ferramentas de pixel art por código

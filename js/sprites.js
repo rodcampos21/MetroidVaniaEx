@@ -247,8 +247,6 @@ function windowSprite(st) {
 }
 
 function buildSprites() {
-  SPR.skeleton = [0, 1, 2, 3].map(i => skeletonFrame(i / 4 * Math.PI * 2, false).canvas());
-  SPR.skeletonHit = skeletonFrame(0, true).canvas();
   SPR.bat = [0, 1, 2].map(k => batFrame(k, false).canvas());
   SPR.batHit = batFrame(1, true).canvas();
   SPR.relicD = relicSprite('#3ab0d8', '#9ff0ff', '#1c6a8a').canvas();

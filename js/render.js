@@ -102,6 +102,8 @@ function gatherLights() {
   const L = [], p = G.player, art = G.room.art;
   if (G.state !== 'dead') L.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, r: 80, a: 0.9, col: null });
   for (const l of art.lights) L.push(l);
+  for (const e of G.enemies)                       // o lobisomem fica visível na penumbra
+    if (e instanceof Werewolf && e.state !== 'dying') L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 52, a: 0.6, col: null });
   for (const it of G.items) {
     if (it.type === 'save') L.push({ x: it.x + 8, y: it.y + 2, r: 90, a: 1, col: [255, 140, 50], flick: 1 });
     else if (it.type === 'D') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [120, 220, 255] });
@@ -255,17 +257,101 @@ function drawItems() {
 function drawEnemy(e) {
   if (e.dead) return;
   const flash = e.flash > 0;
-  if (e instanceof Walker) {
-    const spr = flash ? SPR.skeletonHit : SPR.skeleton[Math.floor(e.t * 6) % 4];
-    const ax = Math.round((e.x + e.w / 2) * AP), ay = Math.round((e.y + e.h) * AP);
-    shadowAt(ax, ay, 30);
-    ctx.save(); ctx.translate(ax, 0); if (e.dir < 0) ctx.scale(-1, 1);
-    ctx.drawImage(spr, -34, ay - 102); ctx.restore();
+  if (e instanceof Werewolf) {
+    drawWerewolf(e);
   } else {
     const spr = flash ? SPR.batHit : SPR.bat[Math.floor(e.t * 12) % 3];
     const ax = Math.round((e.x + 6) * AP), ay = Math.round((e.y + 5 + Math.sin(e.t * 3) * 1.2) * AP);
     ctx.save(); ctx.translate(ax, 0); if (G.player.x < e.x) ctx.scale(-1, 1);
     ctx.drawImage(spr, -40, ay - 25); ctx.restore();
+  }
+}
+
+// ---------------- lobisomem ----------------
+let wolfWhite = null;                    // silhueta branca para o "piscar" ao levar dano
+function wolfFrameImg(white) {
+  if (!white) return wolfImg;
+  if (!wolfWhite && wolfImg.complete) {
+    wolfWhite = document.createElement('canvas'); wolfWhite.width = wolfImg.width; wolfWhite.height = wolfImg.height;
+    const g = wolfWhite.getContext('2d'); g.drawImage(wolfImg, 0, 0);
+    g.globalCompositeOperation = 'source-atop'; g.fillStyle = '#fff'; g.fillRect(0, 0, wolfWhite.width, wolfWhite.height);
+  }
+  return wolfWhite || wolfImg;
+}
+function drawWolfFrame(fi, ax, ay, dir, rot, img, alpha = 1, sx = 1, sy = 1) {
+  const [x, y, w, h, cx, cy] = WOLF_FRAMES[fi];
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(Math.round(ax), Math.round(ay));
+  if (dir < 0) ctx.scale(-1, 1);
+  if (rot) ctx.rotate(rot);
+  if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
+  ctx.drawImage(img, x, y, w, h, -Math.round(cx), -Math.round(cy), w, h);
+  ctx.restore();
+}
+function drawWerewolf(e) {
+  if (!wolfImg.complete) return;
+  const ax = (e.x + e.w / 2) * AP, ay = (e.y + e.h) * AP;
+  let fi = 0, rot = 0, sx = 1, sy = 1, ox = 0, oy = 0;
+  const st = e.st, walkF = Math.floor(e.walk / 3.2) % 12;
+  switch (e.state) {
+    case 'patrol': case 'chase':
+      fi = Math.abs(e.vx) > 1 ? walkF : 0;
+      if (fi === 0 && Math.abs(e.vx) <= 1) sy = 1 + Math.sin(G.time * 3) * 0.012;   // respirando
+      break;
+    case 'alert': {                                   // uivo: joga a cabeça para trás e treme
+      const k = Math.min(1, st / 0.15);
+      fi = 6; rot = -0.22 * k; ox = (Math.random() - 0.5) * 3 * k;
+      break;
+    }
+    case 'dashPrep': fi = 3; rot = 0.12; sy = 0.9; sx = 1.06; ox = -6; break;
+    case 'dash': fi = 9; rot = 0.3; oy = -4; break;
+    case 'windup': fi = 3; rot = -0.16 - (e.combo ? 0 : Math.min(1, st / 0.2) * 0.06); ox = -5; break;
+    case 'claw': fi = 8; rot = 0.24; ox = 8; break;
+    case 'recover': fi = 0; rot = 0.06 * Math.max(0, 1 - st * 3); break;
+    case 'dying': {
+      const k = Math.min(1, st / 0.7);
+      fi = 0; rot = -1.45 * k * k; oy = 6 * k;
+      break;
+    }
+  }
+  if (e.kb > 0) rot -= 0.08;
+  // rastro do dash
+  for (const gh of e.trail) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    drawWolfFrame(9, (gh.x + e.w / 2) * AP, (gh.y + e.h) * AP - 4, gh.dir, 0.3, wolfImg, gh.life * 1.6);
+    ctx.restore();
+  }
+  shadowAt(ax, ay, 40);
+  const alpha = e.state === 'dying' ? Math.max(0, 1 - Math.max(0, st - 0.7) / 0.4) : 1;
+  const dir = e.dir;
+  drawWolfFrame(fi, ax + ox * dir, ay + oy, dir, rot, wolfFrameImg(e.flash > 0), alpha, sx, sy);
+  // olhos brilhando no alerta, no preparo e no dash
+  if (e.state !== 'dying') {
+    const f = WOLF_FRAMES[fi], ex = f[6] - f[4], ey = f[7] - f[5];
+    const c = Math.cos(rot), s = Math.sin(rot);
+    const gx = ax + (ox + ex * c - ey * s) * dir, gy = ay + oy + ex * s + ey * c;
+    const angry = ['alert', 'dashPrep', 'dash', 'windup', 'claw'].includes(e.state);
+    const r = e.state === 'alert' ? 18 + Math.sin(G.time * 30) * 3 : angry ? 12 : 6;
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, r);
+    g.addColorStop(0, 'rgba(255,240,140,0.95)'); g.addColorStop(0.3, 'rgba(255,90,30,0.5)'); g.addColorStop(1, 'rgba(255,40,0,0)');
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(gx - r, gy - r, r * 2, r * 2); ctx.restore();
+  }
+  // marcas das garras
+  if (e.state === 'claw' && st < WOLF.STRIKE + 0.06) {
+    const prog = Math.min(1, st / WOLF.STRIKE), fade = 1 - Math.max(0, st - WOLF.STRIKE) / 0.06;
+    const bx = ax + dir * 58, by = ay - 128, down = e.combo % 2 === 0;
+    ctx.save(); ctx.lineCap = 'round';
+    for (let k = 0; k < 3; k++) {
+      const x0 = bx + dir * (k * 16 - 26), y0 = by + (down ? 0 : 80) + k * 5;
+      const x1 = x0 + dir * 40, y1 = y0 + (down ? 80 : -80);
+      const xe = x0 + (x1 - x0) * prog, ye = y0 + (y1 - y0) * prog;
+      ctx.strokeStyle = `rgba(160,10,10,${0.8 * fade})`; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(xe, ye); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,235,220,${0.95 * fade})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(xe, ye); ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 

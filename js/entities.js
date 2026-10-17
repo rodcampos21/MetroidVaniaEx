@@ -283,22 +283,160 @@ class Enemy {
   }
 }
 
-// ESQUELETO: anda de um lado pro outro e vira nas paredes e bordas
-class Walker extends Enemy {
-  constructor(x, y) { super(x, y, 14, 24, 3); this.dir = -1; this.color = '#cfc8b0'; }
+// LOBISOMEM: patrulha; ao ver o herói, uiva, avança num dash e ataca com garradas
+const WOLF = {
+  W: 22, H: 34, HP: 6,
+  PATROL: 24, CHASE: 62,
+  SIGHT_X: 150, SIGHT_Y: 34,          // alcance da visão
+  ALERT: 0.5,                         // uivo antes de agir
+  DASH_PREP: 0.28, DASH_SPEED: 290, DASH_TIME: 0.5, DASH_CD: 2.4,
+  CLAW_RANGE: 30,
+  WIND: 0.34, WIND2: 0.16, STRIKE: 0.14, RECOVER: 0.6,
+};
+class Werewolf extends Enemy {
+  constructor(x, y) {
+    super(x, y - (WOLF.H - TILE), WOLF.W, WOLF.H, WOLF.HP);
+    this.dir = -1; this.color = '#5a4a44';
+    this.state = 'patrol'; this.st = 0;          // estado atual e tempo nele
+    this.seen = 0; this.dashCd = 0; this.combo = 0; this.walk = 0;
+    this.pause = 0; this.hitDone = false; this.trail = [];
+  }
+  set(state) { this.state = state; this.st = 0; this.hitDone = false; }
+
+  canSee(p) {
+    const cx = this.x + this.w / 2, cy = this.y + this.h / 2;
+    const px = p.x + p.w / 2, py = p.y + p.h / 2;
+    const dx = px - cx, dy = py - cy;
+    if (Math.abs(dx) > WOLF.SIGHT_X || Math.abs(dy) > WOLF.SIGHT_Y) return false;
+    if (Math.sign(dx) !== this.dir && Math.abs(dx) > 40 && this.state === 'patrol') return false;
+    // nenhuma parede no caminho
+    const n = Math.ceil(Math.abs(dx) / 6);
+    for (let k = 1; k < n; k++) {
+      const x = cx + dx * k / n, y = cy + dy * k / n - 6;
+      if (isSolid(tileAt(Math.floor(x / TILE), Math.floor(y / TILE)))) return false;
+    }
+    return true;
+  }
+  groundAhead(d = this.dir) {
+    const ahead = d > 0 ? this.x + this.w + 2 : this.x - 2;
+    const below = tileAt(Math.floor(ahead / TILE), Math.floor((this.y + this.h + 1) / TILE));
+    return isSolid(below) || below === '=';
+  }
+  // caixa das garras (na frente dele)
+  clawBox() {
+    const w = 30, h = 26;
+    return { x: this.dir > 0 ? this.x + this.w - 4 : this.x + 4 - w, y: this.y + 4, w, h };
+  }
+  // encostar no corpo machuca; garras e dash machucam mais longe
+  touches(p) {
+    if (this.state === 'dying') return false;
+    if (this.state === 'claw' && this.st < WOLF.STRIKE && overlaps(p, this.clawBox())) return true;
+    return overlaps(p, { x: this.x + 3, y: this.y + 6, w: this.w - 6, h: this.h - 6 });
+  }
+
+  hurt(dmg, dir) {
+    if (this.state === 'dying') return;
+    this.hp -= dmg;
+    this.flash = 0.12;
+    G.shake = Math.max(G.shake, 0.08);
+    spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 10, '#7a1010', { speed: 90, grav: 300, size: 2.5, life: 0.5 });
+    if (this.hp <= 0) {
+      this.set('dying'); this.vx = dir * 60; this.vy = -90;
+      spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 26, '#5a0a0a', { speed: 120, grav: 350, size: 3, life: 0.8 });
+      return;
+    }
+    // é pesado: só cambaleia se não estiver no meio de um ataque
+    if (['patrol', 'chase', 'recover', 'alert'].includes(this.state)) {
+      this.kb = 0.14; this.vx = dir * 70;
+    }
+    if (this.state === 'patrol') { this.dir = -dir; this.set('alert'); }   // vira e encara quem bateu
+    this.seen = 3;
+  }
+
   update(dt) {
-    this.t += dt; this.flash -= dt;
-    if (this.kb > 0) { this.kb -= dt; this.vx = approach(this.vx, 0, 400 * dt); }
-    else this.vx = this.dir * 26;
+    const p = G.player;
+    this.t += dt; this.st += dt; this.flash -= dt;
+    this.dashCd = Math.max(0, this.dashCd - dt);
+    for (const gh of this.trail) gh.life -= dt;
+    this.trail = this.trail.filter(g => g.life > 0);
+    const cx = this.x + this.w / 2, px = p.x + p.w / 2;
+    const dx = px - cx, adx = Math.abs(dx);
+    const playerOk = G.state === 'play';
+    const sees = playerOk && this.canSee(p);
+    if (sees) this.seen = 2.5; else this.seen = Math.max(0, this.seen - dt);
+    const faceP = () => { if (adx > 2) this.dir = Math.sign(dx); };
+    let speed = 0;
+
+    switch (this.state) {
+      case 'patrol':
+        if (this.pause > 0) { this.pause -= dt; speed = 0; }
+        else {
+          speed = WOLF.PATROL;
+          if (this.hitWallX || (this.onGround && !this.groundAhead())) { this.dir = -this.dir; this.pause = 0.8 + Math.random() * 0.6; }
+        }
+        if (sees) { faceP(); this.set('alert'); G.shake = Math.max(G.shake, 0.15); }
+        break;
+      case 'alert':                                           // uivo
+        if (this.st >= WOLF.ALERT) this.decide(adx);
+        break;
+      case 'chase':
+        faceP();
+        speed = WOLF.CHASE;
+        if (!this.groundAhead()) speed = 0;
+        if (this.seen <= 0) { this.set('patrol'); break; }
+        this.decide(adx);
+        break;
+      case 'dashPrep':                                        // agacha antes de saltar
+        faceP();
+        if (this.st >= WOLF.DASH_PREP) {
+          this.set('dash'); this.dashCd = WOLF.DASH_CD;
+          spawnParticles(cx, this.y + this.h, 10, '#5a5a50', { angle: this.dir > 0 ? Math.PI : 0, spread: 1.2, speed: 80, life: 0.4 });
+        }
+        break;
+      case 'dash':
+        speed = WOLF.DASH_SPEED;
+        if (Math.floor(this.st * 60) % 3 === 0) this.trail.push({ x: this.x, y: this.y, dir: this.dir, life: 0.2 });
+        if (this.st > WOLF.DASH_TIME || this.hitWallX || !this.groundAhead() ||
+            (Math.sign(dx) === this.dir && adx < WOLF.CLAW_RANGE)) {
+          this.vx = 0; this.combo = 0;
+          this.set(adx < WOLF.CLAW_RANGE + 12 ? 'windup' : 'recover');
+        }
+        break;
+      case 'windup':                                          // ergue as garras
+        if (this.combo === 0) faceP();
+        if (this.st >= (this.combo === 0 ? WOLF.WIND : WOLF.WIND2)) { this.set('claw'); this.vx = this.dir * 90; G.shake = Math.max(G.shake, 0.06); }
+        break;
+      case 'claw':                                            // golpe
+        if (this.st >= WOLF.STRIKE + 0.08) {
+          this.combo++;
+          if (this.combo < 2) this.set('windup'); else this.set('recover');
+        }
+        break;
+      case 'recover':
+        if (this.st >= WOLF.RECOVER) this.seen > 0 ? this.set('chase') : this.set('patrol');
+        break;
+      case 'dying':
+        if (this.st > 1.1) {
+          this.dead = true;
+          if (Math.random() < 0.6) G.items.push({ type: 'heart', x: cx - 4, y: this.y + 10, w: 8, h: 8, vy: -80 });
+        }
+        break;
+    }
+
+    if (this.kb > 0) { this.kb -= dt; this.vx = approach(this.vx, 0, 500 * dt); }
+    else if (this.state === 'claw' || this.state === 'dying') this.vx = approach(this.vx, 0, 400 * dt);
+    else this.vx = this.dir * speed;
     this.vy = Math.min(this.vy + PHYS.GRAVITY * dt, PHYS.MAX_FALL);
     moveBody(this, dt);
-    if (this.kb > 0) return;
-    if (this.hitWallX) this.dir = -this.dir;
-    else if (this.onGround) {
-      const ahead = this.dir > 0 ? this.x + this.w + 1 : this.x - 1;
-      const below = tileAt(Math.floor(ahead / TILE), Math.floor((this.y + this.h + 1) / TILE));
-      if (!isSolid(below) && below !== '=') this.dir = -this.dir;
-    }
+    this.walk += Math.abs(this.vx) * dt;
+  }
+
+  // escolhe o próximo ataque
+  decide(adx) {
+    if (this.seen <= 0) return this.set('patrol');
+    if (adx < WOLF.CLAW_RANGE) { this.combo = 0; return this.set('windup'); }
+    if (this.dashCd <= 0 && adx > 45 && this.groundAhead()) return this.set('dashPrep');
+    if (this.state !== 'chase') this.set('chase');
   }
 }
 

@@ -39,7 +39,7 @@ function enterRoom(id, px, py) {
       const x = tx * TILE, y = ty * TILE, key = `${id}:${tx},${ty}`;
       switch (c) {
         case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
-        case 'W': G.enemies.push(new Walker(x + 1, y + TILE - 24)); break;
+        case 'W': G.enemies.push(new Werewolf(x - 3, y)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
         case 'P': {                       // o braseiro fica apoiado no chão
           let gy = ty; while (gy < h - 1 && !'#='.includes(def.map[gy + 1][tx])) gy++;
@@ -216,7 +216,7 @@ function update(dt) {
 
   for (const e of G.enemies) {
     e.update(dt);
-    if (!e.dead && p.dashT <= 0 && overlaps(p, e)) p.hurt(1, e.x + e.w / 2);
+    if (!e.dead && p.dashT <= 0 && (e.touches ? e.touches(p) : overlaps(p, e))) p.hurt(1, e.x + e.w / 2);
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 
