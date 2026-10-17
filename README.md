@@ -22,6 +22,8 @@ Abra o `index.html` no navegador — ou, se o GitHub Pages estiver ativado, aces
 
 O jogo salva sozinho ao tocar nos **braseiros** (que também recuperam a vida) e ao pegar itens.
 
+No começo de um jogo novo, um **tutorial** ensina os comandos (teclado ou toque, conforme o aparelho). A tela de **Controles** fica no menu principal e na pausa.
+
 ## O que já existe
 
 - Pixel art sombria: masmorras de pedra com musgo, tochas, correntes, estandartes, névoa e luz dinâmica
@@ -52,6 +54,7 @@ js/world.js       pintura das salas e do fundo em camadas
 js/input.js       teclado e toque
 js/engine.js      física, colisão e partículas
 js/entities.js    jogador e inimigos
+js/tutorial.js    tutorial inicial e tela de controles
 js/render.js      desenho de tudo na tela
 js/main.js        salas, itens, salvamento e loop do jogo
 ```

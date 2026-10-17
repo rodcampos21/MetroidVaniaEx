@@ -174,7 +174,9 @@ class Player {
     }
 
     // ---- ataque ----
-    if (I.pressed.attack && this.atkT <= 0 && this.atkCd <= 0 && this.stun <= 0 && this.dashT <= 0 && !this.wall) this.startAttack();
+    // guarda o toque de ataque feito durante um golpe (para o combo sair mesmo apertando rápido)
+    if (I.pressed.attack) this.atkBuf = 0.3; else this.atkBuf = Math.max(0, (this.atkBuf || 0) - dt);
+    if (this.atkBuf > 0 && this.atkT <= 0 && this.atkCd <= 0 && this.stun <= 0 && this.dashT <= 0 && !this.wall) { this.atkBuf = 0; this.startAttack(); }
     if (this.atkT > 0) {
       const before = this.atkPhase();
       this.atkT -= dt;

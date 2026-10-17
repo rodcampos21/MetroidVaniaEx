@@ -207,7 +207,7 @@ function render() {
     ctx.globalAlpha = Math.min(0.85, t * 0.7); ctx.fillStyle = '#0a0000'; ctx.fillRect(0, 0, CW, CH); ctx.globalAlpha = 1;
     text('VOCÊ MORREU', CW / 2, CH / 2 - 40, { size: 76, font: FONT_T, weight: 800, align: 'center', color: '#9a1a14', alpha: Math.min(1, t * 1.2), spacing: 6 });
   }
-  if (G.paused) {
+  if (G.paused && !Controls.open) {
     ctx.globalAlpha = 0.6; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, CW, CH); ctx.globalAlpha = 1;
     text('PAUSADO', CW / 2, CH / 2 - 44, { size: 56, font: FONT_T, weight: 800, align: 'center', color: '#d8d0b8', spacing: 6 });
     text('aperte pausa para continuar', CW / 2, CH / 2 + 26, { size: 24, align: 'center', color: '#8a8478', weight: 500 });
@@ -486,6 +486,7 @@ function drawHUD() {
   }
   drawMinimap();
   drawBossUI();
+  Tutorial.draw();
 
   if (G.roomTitle && G.roomTitle.t > 0) {
     const a = Math.min(1, G.roomTitle.t, (2.5 - G.roomTitle.t) * 2);
@@ -499,7 +500,7 @@ function drawHUD() {
   if (G.banner && G.banner.t > 0) {
     const b = G.banner, a = Math.min(1, b.t * 2);
     const lines = wrapText(b.text, 640, 24);
-    const h = 74 + lines.length * 30, w = 720, x = CW / 2 - w / 2, y = 205;
+    const h = 74 + lines.length * 30, w = 720, x = CW / 2 - w / 2, y = Tutorial.active() ? 230 : 205;
     ctx.save(); ctx.globalAlpha = a;
     frameBox(x, y, w, h, 0.88);
     ctx.fillStyle = b.color || '#c8c0a8'; ctx.globalAlpha = a * 0.7;
