@@ -6,22 +6,73 @@ const Input = (() => {
   const down = {};     // botão está segurado
   const pressed = {};  // botão foi apertado agora (dura 1 passo do jogo)
 
-  const keyMap = {
-    ArrowLeft: 'left', KeyA: 'left',
-    ArrowRight: 'right', KeyD: 'right',
-    ArrowUp: 'up', KeyW: 'up',
-    ArrowDown: 'down', KeyS: 'down',
-    KeyZ: 'jump', Space: 'jump', KeyK: 'jump',
-    KeyX: 'attack', KeyJ: 'attack',
-    KeyC: 'dash', KeyL: 'dash',                       // rolar
-    ShiftLeft: 'sprint', ShiftRight: 'sprint', KeyV: 'sprint', KeyI: 'sprint',  // dash
-    Escape: 'pause', KeyP: 'pause', Enter: 'pause',
+  // ---------- teclas (remapeáveis no menu "Teclas") ----------
+  // cada ação tem 2 teclas: principal e alternativa. 'dash' = rolar, 'sprint' = dash no chão.
+  const ACTIONS = [
+    ['left', 'Esquerda'], ['right', 'Direita'], ['up', 'Cima / escalar'], ['down', 'Baixo / agachar'],
+    ['jump', 'Pular'], ['attack', 'Atacar'], ['sprint', 'Dash'], ['dash', 'Rolar'], ['pause', 'Pausar'],
+  ];
+  const DEFAULT_BINDS = {
+    left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], up: ['ArrowUp', 'KeyW'], down: ['ArrowDown', 'KeyS'],
+    jump: ['KeyZ', 'Space'], attack: ['KeyX', 'KeyJ'], sprint: ['ShiftLeft', 'KeyV'], dash: ['KeyC', 'KeyL'],
+    pause: ['KeyP', 'Enter'],
   };
+  const BIND_KEY = 'contos_abismo_teclas_v1';
+  let binds = JSON.parse(JSON.stringify(DEFAULT_BINDS));
+  try {
+    const saved = JSON.parse(localStorage.getItem(BIND_KEY) || 'null');
+    if (saved) for (const [a] of ACTIONS) if (Array.isArray(saved[a])) binds[a] = [saved[a][0] || null, saved[a][1] || null];
+  } catch (_) {}
+  let keyMap = {};
+  function rebuild() {
+    keyMap = { Escape: 'pause' };                 // Esc sempre pausa (e nunca pode ser remapeado)
+    for (const [a] of ACTIONS) for (const c of binds[a]) if (c) keyMap[c] = a;
+  }
+  rebuild();
+  function saveBinds() { try { localStorage.setItem(BIND_KEY, JSON.stringify(binds)); } catch (_) {} }
+  // põe a tecla na ação; se ela já era de outra ação, as duas trocam de lugar
+  function setBind(action, slot, code) {
+    const old = binds[action][slot];
+    for (const [a] of ACTIONS) for (let s = 0; s < 2; s++)
+      if (binds[a][s] === code && !(a === action && s === slot)) binds[a][s] = old;
+    binds[action][slot] = code;
+    rebuild(); saveBinds();
+  }
+  function clearBind(action, slot) { binds[action][slot] = null; rebuild(); saveBinds(); }
+  function resetBinds() { binds = JSON.parse(JSON.stringify(DEFAULT_BINDS)); rebuild(); saveBinds(); }
+
+  const NAMES = {
+    ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Space: 'Espaço', Enter: 'Enter',
+    ShiftLeft: 'Shift', ShiftRight: 'Shift Dir.', ControlLeft: 'Ctrl', ControlRight: 'Ctrl Dir.',
+    AltLeft: 'Alt', AltRight: 'Alt Gr', Tab: 'Tab', Backspace: '⌫', CapsLock: 'Caps', Escape: 'Esc',
+    MetaLeft: 'Win', MetaRight: 'Win', ContextMenu: 'Menu', Insert: 'Ins', Delete: 'Del', Home: 'Home',
+    End: 'End', PageUp: 'PgUp', PageDown: 'PgDn', Comma: ',', Period: '.', Slash: ';', Semicolon: 'Ç',
+    Quote: '~', BracketLeft: '´', BracketRight: '[', Backslash: ']', Minus: '-', Equal: '=', Backquote: "'",
+    IntlBackslash: '\\', IntlRo: '/', NumpadEnter: 'Num Enter', NumpadAdd: 'Num +', NumpadSubtract: 'Num -',
+    NumpadMultiply: 'Num *', NumpadDivide: 'Num /', NumpadDecimal: 'Num ,',
+  };
+  // no Chrome/Edge dá para saber a letra real impressa na tecla (layout ABNT, AZERTY...)
+  let layout = null;
+  try { navigator.keyboard && navigator.keyboard.getLayoutMap().then(m => { layout = m; }).catch(() => {}); } catch (_) {}
+  function keyName(code) {
+    if (!code) return '—';
+    if (layout && /^(Key|Digit|Comma|Period|Slash|Semicolon|Quote|Bracket|Backslash|Minus|Equal|Backquote|Intl)/.test(code) && layout.get(code))
+      return layout.get(code).toUpperCase();
+    if (NAMES[code]) return NAMES[code];
+    if (code.startsWith('Key')) return code.slice(3);
+    if (code.startsWith('Digit')) return code.slice(5);
+    if (code.startsWith('Numpad')) return 'Num ' + code.slice(6);
+    return code;
+  }
+  // nomes das teclas de uma ação (all = principal e alternativa)
+  function keysOf(action, all = true) { return binds[action].slice(0, all ? 2 : 1).filter(Boolean).map(keyName); }
+  function label(action) { return keysOf(action).join(' ou ') || '—'; }
 
   function press(a) { if (!down[a]) pressed[a] = true; down[a] = true; }
   function release(a) { down[a] = false; }
 
   addEventListener('keydown', e => {
+    if (Input.capturing) return;                    // tela de remapear esperando uma tecla
     const a = keyMap[e.code];
     if (a) { press(a); e.preventDefault(); }
   });
@@ -98,5 +149,9 @@ const Input = (() => {
 
   function endStep() { for (const k in pressed) delete pressed[k]; }
 
-  return { down, pressed, bindTouch, endStep };
+  return {
+    down, pressed, bindTouch, endStep, capturing: false,
+    ACTIONS, binds: () => binds, setBind, clearBind, resetBinds, keyName, keysOf, label,
+    isKey: (action, code) => binds[action].includes(code),
+  };
 })();

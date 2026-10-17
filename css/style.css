@@ -29,14 +29,14 @@ canvas#game {
 }
 #menu::before {                    /* preenche as sobras da tela com a própria arte desfocada */
   content: ""; position: absolute; inset: -40px;
-  background: url(../assets/menu_bg.jpg?v=20261017154655) center / cover no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017155959) center / cover no-repeat;
   filter: blur(18px) brightness(.45);
 }
 #menu .stage {
   position: relative; container-type: inline-size;
   width: min(100vw, calc(100dvh * 2576 / 1405));
   aspect-ratio: 2576 / 1405;
-  background: url(../assets/menu_bg.jpg?v=20261017154655) center / 100% 100% no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017155959) center / 100% 100% no-repeat;
   box-shadow: 0 0 60px rgba(0, 0, 0, .7);
 }
 /* brilho da joia da espada */
@@ -68,7 +68,7 @@ canvas#game {
 }
 #menu .item::before {             /* faixa vermelha com o dragão (só na opção selecionada) */
   content: ""; position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 540 / 145;
-  background: url(../assets/menu_band.png?v=20261017154655) 0 0 / 100% 100% no-repeat;
+  background: url(../assets/menu_band.png?v=20261017155959) 0 0 / 100% 100% no-repeat;
   opacity: 0; transition: opacity .15s; z-index: -1;
 }
 #menu .item.sel { color: #f0dfcc; }
@@ -226,3 +226,44 @@ body.in-menu #touch { display: none !important; }
 #buttons button.locked { filter: grayscale(1) brightness(.55); opacity: .45; font-size: 0 !important; }
 #buttons button.locked::after { content: "🔒"; font-size: 20px; }
 #buttons button.unlocked { animation: tuthint .8s ease-in-out 4; }
+
+/* ---------- remapear teclas (só computador) ---------- */
+@media (hover: none) and (pointer: coarse) { .desktop-only { display: none !important; } }
+#keybinds {
+  position: fixed; inset: 0; z-index: 31;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 2, 6, .82); padding: 12px;
+}
+#keybinds.hidden { display: none; }
+#keybinds .kb-box { width: min(640px, 100%); }
+#keybinds h2 { margin: 0 0 6px; font-family: "Cinzel", serif; letter-spacing: 4px; text-transform: uppercase; color: #e8c890; text-align: center; font-size: 26px; }
+#keybinds .kb-sub { text-align: center; color: #9f978a; font-size: 14px; margin: 0 0 12px; line-height: 1.4; }
+#keybinds .kb-sub b { color: #d8d0b8; }
+#keybinds .kb-head, #keybinds .kb-row { display: grid; grid-template-columns: 1fr 150px 150px; gap: 10px; align-items: center; }
+#keybinds .kb-head { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #7a7466; padding: 0 0 4px; }
+#keybinds .kb-head span:not(:first-child) { text-align: center; }
+#keybinds .kb-row { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+#keybinds .kb-row b { color: #f0e4cc; font-size: 16px; }
+#keybinds .kb-slot {
+  height: 34px; font: 700 15px "Alegreya Sans", sans-serif; color: #f0e8d0; cursor: pointer;
+  background: #2a2622; border: 2px solid #8a8272; border-bottom-width: 4px; border-radius: 4px; outline: none;
+}
+#keybinds .kb-slot:hover, #keybinds .kb-slot:focus { border-color: #e8c890; color: #fff; }
+#keybinds .kb-slot.empty { color: #6a6458; }
+#keybinds .kb-slot.waiting { border-color: #ff6a3a; color: #ffb090; font-size: 12px; animation: kbwait .8s ease-in-out infinite; }
+#keybinds .kb-slot.done { animation: kbdone .5s ease-out; }
+@keyframes kbwait { 50% { background: #3a1e18; } }
+@keyframes kbdone { 0% { background: #4a6a3a; } 100% { background: #2a2622; } }
+#keybinds .kb-note { text-align: center; color: #7a7466; font-size: 12px; margin: 10px 0 0; }
+#keybinds .ctl-btns { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+#keybinds .ctl-btns button {
+  font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; font-size: 15px;
+  padding: 10px 20px; color: #d8d0b8; background: linear-gradient(#22282c, #12161a); border: 2px solid #4a4f57; cursor: pointer; outline: none;
+}
+#keybinds .ctl-btns button:hover, #keybinds .ctl-btns button:focus { border-color: #b0302a; color: #fff; }
+#keybinds { background: rgba(4, 2, 6, .9); }
+#keybinds .ctl-box {
+  max-height: 100%; overflow-y: auto; color: #d8d0b8;
+  background: linear-gradient(#141218, #0b0a0d); border: 2px solid #4a4f57; outline: 3px solid #000;
+  box-shadow: 0 0 40px rgba(160, 20, 20, .25); padding: 18px 24px 16px;
+}

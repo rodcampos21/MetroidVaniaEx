@@ -14,42 +14,42 @@ const ctrl = (keys, touch) => (isTouch() ? touch : keys);
 const TUT_STEPS = [
   {
     title: 'Mover',
-    keys: 'Use [←] [→] ou [A] [D] para andar.',
+    keys: 'Use [@left] [@right] para andar.',
     touch: 'Arraste o {dpad} para os lados para andar.',
     hint: 'dpad',
     done: (p, s) => s.walked > 60,
   },
   {
     title: 'Pular',
-    keys: 'Aperte [Z] ou [Espaço] para pular. Segure para pular mais alto.',
+    keys: 'Aperte [@jump] para pular. Segure para pular mais alto.',
     touch: 'Toque em {jump} para pular. Segure para pular mais alto.',
     hint: 'jump',
     done: (p, s) => s.jumped,
   },
   {
     title: 'Atacar',
-    keys: 'Aperte [X] para golpear com a espada.',
+    keys: 'Aperte [@attack1] para golpear com a espada.',
     touch: 'Toque em {attack} para golpear com a espada.',
     hint: 'attack',
     done: (p, s) => s.attacked,
   },
   {
     title: 'Combo',
-    keys: 'Aperte [X] duas vezes seguidas: corte para baixo e depois para cima.',
+    keys: 'Aperte [@attack1] duas vezes seguidas: corte para baixo e depois para cima.',
     touch: 'Toque em {attack} duas vezes seguidas: corte para baixo e depois para cima.',
     hint: 'attack',
     done: (p, s) => s.combo,
   },
   {
     title: 'Dash',
-    keys: 'Aperte [Shift] ou [V] para uma arrancada rápida pelo chão.',
+    keys: 'Aperte [@sprint] para uma arrancada rápida pelo chão.',
     touch: 'Toque em {sprint} para uma arrancada rápida pelo chão.',
     hint: 'sprint',
     done: (p, s) => s.sprinted,
   },
   {
     title: 'Agachar',
-    keys: 'Segure [↓] ou [S] para agachar. Atacar agachado dá uma estocada.',
+    keys: 'Segure [@down] para agachar. Atacar agachado dá uma estocada.',
     touch: 'Puxe o {dpad} para baixo para agachar. Atacar agachado dá uma estocada.',
     hint: 'dpad',
     done: (p, s) => s.crouched > 0.35,
@@ -130,7 +130,14 @@ const Tutorial = {
 };
 
 // desenha uma frase com teclas [X] e ícones {jump} no meio do texto
+// [@jump] vira as teclas atuais da ação ("[Z] ou [Espaço]"); [@jump1] só a principal.
+// Em [@left] [@right] juntos, mostra só as principais para não ficar comprido.
+function expandKeys(str) {
+  return str.replace(/\[@left\] \[@right\]/g, () => Input.keysOf('left', false).concat(Input.keysOf('right', false)).map(k => `[${k}]`).join(' '))
+    .replace(/\[@([a-z]+?)(1?)\]/g, (_, a, one) => Input.keysOf(a, !one).map(k => `[${k}]`).join(' ou ') || '[—]');
+}
 function drawRichLine(str, x, y, maxW, alpha = 1) {
+  str = expandKeys(str);
   const parts = str.split(/(\[[^\]]+\]|\{[a-z]+\})/).filter(Boolean);
   ctx.save();
   ctx.font = `500 23px ${FONT_B}`;
@@ -193,6 +200,7 @@ const Controls = {
     const el = document.getElementById('controls');
     el.querySelector('.ctl-keys').classList.toggle('hidden', isTouch());
     el.querySelector('.ctl-touch').classList.toggle('hidden', !isTouch());
+    fillControlKeys();
     el.querySelector('#ctlSkip').classList.toggle('hidden', !(from === 'pause' && Tutorial.active()));
     el.querySelector('#ctlBack').textContent = from === 'pause' ? 'Continuar' : 'Voltar';
     el.querySelector('#ctlMenu').classList.toggle('hidden', from !== 'pause');
@@ -219,7 +227,7 @@ const Controls = {
     });
     addEventListener('keydown', e => {
       if (!this.open) return;
-      if (['Escape', 'Enter', 'KeyP', 'Space', 'KeyZ', 'KeyX'].includes(e.code)) { e.preventDefault(); e.stopImmediatePropagation(); this.hide(); }
+      if (['Escape', 'Enter', 'Space'].includes(e.code) || ['pause', 'jump', 'attack'].some(a => Input.isKey(a, e.code))) { e.preventDefault(); e.stopImmediatePropagation(); this.hide(); }
     }, true);
   },
 };

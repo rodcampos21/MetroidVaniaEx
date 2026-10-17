@@ -155,15 +155,15 @@ function updateItems(dt) {
         break;
       case 'D':
         collect(it, () => { G.data.abilities.doubleJump = true; },
-          'Salto Etéreo', ctrl('Uma força antiga corre em suas pernas. Aperte Z (pular) no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.', 'Uma força antiga corre em suas pernas. Toque em ▲ no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.'), '#7fe0ff');
+          'Salto Etéreo', ctrl(`Uma força antiga corre em suas pernas. Aperte ${Input.label('jump')} (pular) no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.`, 'Uma força antiga corre em suas pernas. Toque em ▲ no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.'), '#7fe0ff');
         break;
       case 'H':
         collect(it, () => { G.data.abilities.dash = true; },
-          'Rolamento desbloqueado', ctrl('A Palheta do Pecador vibra em sua mão. Aperte C para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.', 'A Palheta do Pecador vibra em sua mão. Toque em ROLAR para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.'), '#ffb347');
+          'Rolamento desbloqueado', ctrl(`A Palheta do Pecador vibra em sua mão. Aperte ${Input.label('dash')} para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.`, 'A Palheta do Pecador vibra em sua mão. Toque em ROLAR para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.'), '#ffb347');
         break;
       case 'G':
         collect(it, () => { G.data.abilities.climb = true; },
-          'Garras do Vigia', ctrl('Pule numa parede e segure na direção dela para se agarrar. Use ↑ e ↓ para escalar e Z para saltar de uma parede à outra. Algo brilha no alto da ponte...', 'Pule numa parede segurando o direcional na direção dela. Direcional para cima e para baixo escala; ▲ salta de uma parede à outra. Algo brilha no alto da ponte...'), '#b48aff');
+          'Garras do Vigia', ctrl(`Pule numa parede e segure na direção dela para se agarrar. Use ${Input.keysOf('up', false)[0] || '↑'} e ${Input.keysOf('down', false)[0] || '↓'} para escalar e ${Input.keysOf('jump', false)[0] || 'Z'} para saltar de uma parede à outra. Algo brilha no alto da ponte...`, 'Pule numa parede segurando o direcional na direção dela. Direcional para cima e para baixo escala; ▲ salta de uma parede à outra. Algo brilha no alto da ponte...'), '#b48aff');
         break;
       case '+':
         collect(it, () => { G.data.maxHp++; p.hp = G.data.maxHp; },
@@ -304,7 +304,9 @@ function setupMenu() {
   if (readSave()) cont.classList.remove('hidden');
   const ctlBtn = document.getElementById('btnControls');
   ctlBtn.addEventListener('click', () => Controls.show('menu'));
-  const items = () => [fresh, cont, ctlBtn].filter(b => !b.classList.contains('hidden'));
+  const keysBtn = document.getElementById('btnKeys');
+  if (isTouch()) keysBtn.classList.add('hidden');          // remapear teclas: só no computador
+  const items = () => [fresh, cont, ctlBtn, keysBtn].filter(b => !b.classList.contains('hidden'));
   let sel = 0;
   const select = i => { const it = items(); sel = (i + it.length) % it.length; it.forEach((b, k) => b.classList.toggle('sel', k === sel)); };
   const chooseNew = () => {
@@ -313,10 +315,10 @@ function setupMenu() {
   };
   cont.addEventListener('click', () => startGame(false));
   fresh.addEventListener('click', chooseNew);
-  [fresh, cont, ctlBtn].forEach(b => b.addEventListener('pointerenter', () => select(items().indexOf(b))));
+  [fresh, cont, ctlBtn, keysBtn].forEach(b => b.addEventListener('pointerenter', () => select(items().indexOf(b))));
   // teclado: ↑/↓ escolhe, Enter/Espaço/Z confirma
   addEventListener('keydown', e => {
-    if (G.state !== 'title' || Controls.open) return;
+    if (G.state !== 'title' || Controls.open || KeyBinds.open) return;
     if (['ArrowUp', 'KeyW'].includes(e.code)) { select(sel - 1); e.preventDefault(); }
     else if (['ArrowDown', 'KeyS'].includes(e.code)) { select(sel + 1); e.preventDefault(); }
     else if (['Enter', 'Space', 'KeyZ'].includes(e.code)) { e.preventDefault(); items()[sel].click(); }
@@ -329,6 +331,7 @@ Input.bindTouch();
 buildSprites();
 setupMenu();
 Controls.setup();
+KeyBinds.setup();
 requestAnimationFrame(frame);
 // pinta as salas aos poucos enquanto o menu está aberto (deixa as transições suaves)
 (function prebuild(ids) {

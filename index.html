@@ -23,6 +23,7 @@
           <button class="item sel" id="btnNew">Novo Jogo</button>
           <button class="item hidden" id="btnContinue">Continuar</button>
           <button class="item small" id="btnControls">Controles</button>
+          <button class="item small desktop-only" id="btnKeys">Teclas</button>
         </div>
       </div>
     </div>
@@ -33,15 +34,15 @@
     <div class="ctl-box">
       <h2>Controles</h2>
       <div class="ctl-keys">
-        <div class="row"><span class="keys"><span class="k">← →</span><span class="k">A D</span></span><b>Mover</b></div>
-        <div class="row"><span class="keys"><span class="k">Z</span><span class="k">Espaço</span></span><b>Pular</b><i>segure para pular mais alto</i></div>
-        <div class="row"><span class="keys"><span class="k">X</span></span><b>Atacar</b><i>2× seguidas = combo (baixo + cima)</i></div>
-        <div class="row"><span class="keys"><span class="k">↓</span><span class="k">S</span></span><b>Agachar</b><i>atacar agachado = estocada · ↓ + pular desce da plataforma</i></div>
-        <div class="row"><span class="keys"><span class="k">Shift</span><span class="k">V</span></span><b>Dash</b><i>arrancada rápida pelo chão</i></div>
-        <div class="row" data-need="doubleJump"><span class="keys"><span class="k">Z</span></span><b>Pulo duplo</b><i>no ar · após o Salto Etéreo</i></div>
-        <div class="row" data-need="dash"><span class="keys"><span class="k">C</span></span><b>Rolar</b><i>invulnerável durante o rolamento · ao derrotar Jorge O Pecador</i></div>
-        <div class="row" data-need="climb"><span class="keys"><span class="k">← →</span></span><b>Escalar</b><i>pule numa parede segurando a direção · ↑ ↓ sobe e desce · pular = salto de parede · após as Garras</i></div>
-        <div class="row"><span class="keys"><span class="k">Esc</span><span class="k">P</span></span><b>Pausar</b></div>
+        <div class="row"><span class="keys" data-keys="left,right"></span><b>Mover</b></div>
+        <div class="row"><span class="keys" data-keys="jump"></span><b>Pular</b><i>segure para pular mais alto</i></div>
+        <div class="row"><span class="keys" data-keys="attack"></span><b>Atacar</b><i>2× seguidas = combo (baixo + cima)</i></div>
+        <div class="row"><span class="keys" data-keys="down"></span><b>Agachar</b><i>atacar agachado = estocada · agachar + pular desce da plataforma</i></div>
+        <div class="row"><span class="keys" data-keys="sprint"></span><b>Dash</b><i>arrancada rápida pelo chão</i></div>
+        <div class="row" data-need="doubleJump"><span class="keys" data-keys="jump"></span><b>Pulo duplo</b><i>no ar · após o Salto Etéreo</i></div>
+        <div class="row" data-need="dash"><span class="keys" data-keys="dash"></span><b>Rolar</b><i>invulnerável durante o rolamento · ao derrotar Jorge O Pecador</i></div>
+        <div class="row" data-need="climb"><span class="keys" data-keys="left,right"></span><b>Escalar</b><i>pule numa parede segurando a direção · cima/baixo sobe e desce · pular = salto de parede · após as Garras</i></div>
+        <div class="row"><span class="keys" data-keys="pause"></span><b>Pausar</b></div>
       </div>
       <div class="ctl-touch">
         <div class="pad-demo">
@@ -65,9 +66,25 @@
         <p class="tip">Jogue com o celular deitado.</p>
       </div>
       <div class="ctl-btns">
+        <button id="ctlKeys" class="desktop-only">Remapear teclas</button>
         <button id="ctlBack">Voltar</button>
         <button id="ctlSkip" class="hidden">Pular tutorial</button>
         <button id="ctlMenu" class="hidden">Menu principal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remapear teclas (só no computador) -->
+  <div id="keybinds" class="hidden">
+    <div class="ctl-box kb-box">
+      <h2>Teclas</h2>
+      <p class="kb-sub">Clique numa tecla (ou use as setas e Enter) e aperte a nova tecla. <b>Esc</b> cancela · <b>Delete</b> deixa vazia.<br>Se a tecla já for de outra ação, as duas trocam de lugar.</p>
+      <div class="kb-head"><span>Ação</span><span>Principal</span><span>Alternativa</span></div>
+      <div class="kb-list"></div>
+      <p class="kb-note">Esc sempre pausa o jogo, além das teclas de Pausar.</p>
+      <div class="ctl-btns">
+        <button id="kbReset">Restaurar padrão</button>
+        <button id="kbBack">Voltar</button>
       </div>
     </div>
   </div>
@@ -93,7 +110,7 @@
        aparece na hora, sem o navegador usar arquivos antigos. -->
   <script>
     (function () {
-      const FILES = ['js/rooms.js', 'js/themes.js', 'js/input.js', 'js/engine.js', 'js/pixel.js', 'js/hero.js', 'js/werewolf_sprite.js', 'js/guitarist_sprite.js', 'js/sprites.js', 'js/world.js', 'js/entities.js', 'js/boss.js', 'js/tutorial.js', 'js/render.js', 'js/main.js'];
+      const FILES = ['js/rooms.js', 'js/themes.js', 'js/input.js', 'js/engine.js', 'js/pixel.js', 'js/hero.js', 'js/werewolf_sprite.js', 'js/guitarist_sprite.js', 'js/sprites.js', 'js/world.js', 'js/entities.js', 'js/boss.js', 'js/tutorial.js', 'js/keybinds.js', 'js/render.js', 'js/main.js'];
       const go = v => {
         const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'css/style.css?v=' + v;
         css.onload = css.onerror = () => { document.body.style.opacity = 1; };
