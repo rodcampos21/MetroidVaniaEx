@@ -31,6 +31,7 @@ function enterRoom(id, px, py) {
   const room = { id, def, w, h, pw: w * TILE, ph: h * TILE, tiles: [], art: getRoomArt(id) };
   G.room = room; G.roomId = id;
   G.enemies = []; G.items = []; G.particles = [];
+  G.gate = null; G.bossBar = null; G.bossTitle = null;
 
   for (let ty = 0; ty < h; ty++) {
     for (let tx = 0; tx < w; tx++) {
@@ -41,6 +42,7 @@ function enterRoom(id, px, py) {
         case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
         case 'W': G.enemies.push(new Werewolf(x - 3, y)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
+        case 'K': if (!(G.data.bosses || {}).guitarist) G.enemies.push(new GuitaristBoss(x, y)); break;
         case 'P': {                       // o braseiro fica apoiado no chão
           let gy = ty; while (gy < h - 1 && !'#='.includes(def.map[gy + 1][tx])) gy++;
           G.items.push({ type: 'save', x, y: gy * TILE, w: 16, h: 16 + (gy - ty) * TILE, top: y });
@@ -118,7 +120,7 @@ function updateItems(dt) {
     switch (it.type) {
       case 'save':
         onSave = true;
-        if (!G.saveLock) {
+        if (!G.saveLock && !G.bossBar) {          // não dá para descansar no meio da luta
           G.saveLock = true;
           p.hp = G.data.maxHp;
           G.data.save = { room: G.roomId, x: it.x + 2, y: it.y + TILE - Player.H };
@@ -214,9 +216,14 @@ function update(dt) {
   if (touchingSpikes(p)) p.hurt(1, 0, true);
   if (G.state !== 'play') return;
 
-  for (const e of G.enemies) {
+  updateBossTrigger();
+  for (const e of G.enemies.slice()) {
     e.update(dt);
-    if (!e.dead && p.dashT <= 0 && (e.touches ? e.touches(p) : overlaps(p, e))) p.hurt(1, e.x + e.w / 2);
+    if (!e.dead && p.dashT <= 0 && (e.touches ? e.touches(p) : overlaps(p, e))) {
+      const wasInv = p.inv > 0;
+      p.hurt(e.dmgNow || 1, e.x + e.w / 2);
+      if (!wasInv && e.onHitPlayer) e.onHitPlayer();
+    }
   }
   G.enemies = G.enemies.filter(e => !e.dead);
 

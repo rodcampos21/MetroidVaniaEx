@@ -104,6 +104,9 @@ function gatherLights() {
   for (const l of art.lights) L.push(l);
   for (const e of G.enemies)                       // o lobisomem fica visível na penumbra
     if (e instanceof Werewolf && e.state !== 'dying') L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 52, a: 0.6, col: null });
+    else if (e instanceof GuitaristBoss) L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 96, a: 0.75, col: e.boom > 0 ? [255, 120, 40] : null });
+    else if (e instanceof SonicNote) L.push({ x: e.x + 5, y: e.y + 5, r: 34, a: 0.8, col: [255, 50, 50] });
+    else if (e instanceof Shockwave) L.push({ x: e.x + 6, y: e.y + 6, r: 40, a: 0.8, col: [255, 140, 60] });
   for (const it of G.items) {
     if (it.type === 'save') L.push({ x: it.x + 8, y: it.y + 2, r: 90, a: 1, col: [255, 140, 50], flick: 1 });
     else if (it.type === 'D') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [120, 220, 255] });
@@ -177,6 +180,7 @@ function render() {
   ctx.save();
   ctx.translate(ox, oy);
   ctx.drawImage(art.canvas, 0, 0);
+  drawGate();
   drawCracked();
   const fi = Math.floor(G.time * 12);
   for (const f of art.flames) { const fr = SPR[f.kind]; ctx.drawImage(fr[(fi + f.x) % fr.length], f.x, f.y); }
@@ -259,6 +263,12 @@ function drawEnemy(e) {
   const flash = e.flash > 0;
   if (e instanceof Werewolf) {
     drawWerewolf(e);
+  } else if (e instanceof GuitaristBoss) {
+    drawBoss(e);
+  } else if (e instanceof SonicNote) {
+    drawSonicNote(e);
+  } else if (e instanceof Shockwave) {
+    drawShockwave(e);
   } else {
     const spr = flash ? SPR.batHit : SPR.bat[Math.floor(e.t * 12) % 3];
     const ax = Math.round((e.x + 6) * AP), ay = Math.round((e.y + 5 + Math.sin(e.t * 3) * 1.2) * AP);
@@ -475,6 +485,7 @@ function drawHUD() {
     ix += 40;
   }
   drawMinimap();
+  drawBossUI();
 
   if (G.roomTitle && G.roomTitle.t > 0) {
     const a = Math.min(1, G.roomTitle.t, (2.5 - G.roomTitle.t) * 2);

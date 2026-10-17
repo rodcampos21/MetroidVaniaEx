@@ -210,10 +210,10 @@ class Player {
   doAttack() {
     const box = this.attackBox();
     for (const e of G.enemies) {
-      if (e.dead || this.hitSet.has(e) || !overlaps(box, e)) continue;
+      if (e.dead || this.hitSet.has(e) || e instanceof Shockwave || !overlaps(box, e)) continue;
       this.hitSet.add(e);
       e.hurt(1, this.facing);
-      if (this.atkKind === 'up') e.vy = -160;
+      if (this.atkKind === 'up' && !e.isBoss && !e.isNote) e.vy = -160;
       spawnParticles(e.x + e.w / 2, e.y + e.h / 2, 8, '#e8f4ff', { angle: this.atkKind === 'up' ? -Math.PI / 2 : this.facing > 0 ? 0 : Math.PI, spread: 1.4, speed: 120, life: 0.25 });
     }
     // quebrar blocos rachados

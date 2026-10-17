@@ -1,5 +1,5 @@
 // versão dos arquivos (atualizada pelo atualizar_versao.sh) — evita imagem antiga em cache
-const ASSET_V = '202610170315';
+const ASSET_V = '202610170331';
 
 // =============================================================
 //  MOTOR: constantes, estado global, colisão com blocos, partículas
@@ -55,7 +55,7 @@ function setTile(tx, ty, c) {
   if (tx < 0 || ty < 0 || tx >= r.w || ty >= r.h) return;
   r.tiles[ty * r.w + tx] = c;
 }
-const isSolid = c => c === '#' || c === 'B';
+const isSolid = c => c === '#' || c === 'B' || c === 'X';   // X = portão fechado
 
 function overlaps(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
