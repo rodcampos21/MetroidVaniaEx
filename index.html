@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#05060c">
+  <title>MetroidVania EX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game"></canvas>
+
+    <div id="menu">
+      <h1>MetroidVania<span>EX</span></h1>
+      <p class="sub">As Cavernas Esquecidas</p>
+      <button id="btnContinue" class="hidden">Continuar</button>
+      <button id="btnNew">Novo jogo</button>
+      <div class="help">
+        <b>Teclado:</b> setas/WASD mover · Z/Espaço pular · X atacar · C dash · Esc pausa<br>
+        ↓ + pular desce das plataformas de madeira
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles de toque (aparecem só em celular/tablet) -->
+  <div id="touch">
+    <div id="dpad"><div class="knob"></div></div>
+    <div id="buttons">
+      <button data-act="dash" class="b-dash">DASH</button>
+      <button data-act="attack" class="b-atk">⚔</button>
+      <button data-act="jump" class="b-jump">▲</button>
+    </div>
+    <button data-act="pause" id="pauseBtn">II</button>
+  </div>
+
+  <script src="js/rooms.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
