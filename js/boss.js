@@ -7,12 +7,13 @@
 // =============================================================
 
 const BOSS = {
-  W: 30, H: 44, HP: 25,
+  W: 30, H: 44, HP: 19,                // 25 → 19 (-25%)
   WALK: 32, WALK2: 44,
   SMASH_RANGE: 52,                    // distância para tentar a guitarrada
   SMASH_REACH: 64, SMASH_DMG: 2,      // alcance e dano do impacto
   NOTE_SPEED: 86, NOTE_SPEED2: 104, NOTE_TURN: 0.95, NOTE_LIFE: 3.6,
   TOUCH_DMG: 1,
+  DMG_MULT: 0.9,                      // todo dano do Jorge (guitarrada, toque, notas e ondas) -10%
 };
 
 // sequências: [quadro, duração] — a guitarrada e o riff
@@ -46,8 +47,8 @@ class GuitaristBoss extends Enemy {
   // corpo machuca ao encostar (menos durante a apresentação)
   touches(p) {
     if (['idle', 'intro', 'dying', 'dead'].includes(this.state)) return false;
-    if (this.state === 'smash' && this.frame === 'smash2' && this.st < 0.16 && overlaps(p, this.smashBox())) { this.dmgNow = BOSS.SMASH_DMG; return true; }
-    this.dmgNow = BOSS.TOUCH_DMG;
+    if (this.state === 'smash' && this.frame === 'smash2' && this.st < 0.16 && overlaps(p, this.smashBox())) { this.dmgNow = BOSS.SMASH_DMG * BOSS.DMG_MULT; return true; }
+    this.dmgNow = BOSS.TOUCH_DMG * BOSS.DMG_MULT;
     return overlaps(p, { x: this.x + 5, y: this.y + 10, w: this.w - 10, h: this.h - 10 });
   }
   smashBox() {
@@ -226,6 +227,7 @@ class GuitaristBoss extends Enemy {
 class SonicNote extends Enemy {
   constructor(x, y, ang, fast) {
     super(x - 5, y - 5, 10, 10, 1);
+    this.dmgNow = BOSS.DMG_MULT;
     this.ang = ang; this.speed = fast ? BOSS.NOTE_SPEED2 : BOSS.NOTE_SPEED;
     this.life = BOSS.NOTE_LIFE; this.spawn = 0.18; this.fade = 0;
     this.color = '#ff4040'; this.isNote = true;
@@ -256,6 +258,7 @@ class SonicNote extends Enemy {
 class Shockwave extends Enemy {
   constructor(x, floorY, dir, big) {
     super(x - 6, floorY - 12, 12, 12, 99);
+    this.dmgNow = BOSS.DMG_MULT;
     this.dir = dir; this.speed = big ? 130 : 105; this.life = big ? 0.9 : 0.6; this.color = '#ff7a30';
   }
   touches(p) { return overlaps(p, this); }

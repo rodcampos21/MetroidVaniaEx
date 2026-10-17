@@ -151,7 +151,7 @@ function updateItems(dt) {
         }
         break;
       case 'heart':
-        if (p.hp < G.data.maxHp) { p.hp++; it.gone = true; spawnParticles(it.x + 4, it.y + 4, 10, '#ff4a5e', { speed: 40 }); }
+        if (p.hp < G.data.maxHp) { p.hp = Math.min(G.data.maxHp, p.hp + 1); it.gone = true; spawnParticles(it.x + 4, it.y + 4, 10, '#ff4a5e', { speed: 40 }); }
         break;
       case 'D':
         collect(it, () => { G.data.abilities.doubleJump = true; },

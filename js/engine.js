@@ -1,5 +1,5 @@
 // versão dos arquivos (atualizada pelo atualizar_versao.sh) — evita imagem antiga em cache
-const ASSET_V = '20261017154107';
+const ASSET_V = '20261017154655';
 
 // =============================================================
 //  MOTOR: constantes, estado global, colisão com blocos, partículas

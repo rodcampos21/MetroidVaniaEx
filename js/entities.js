@@ -236,7 +236,7 @@ class Player {
       if (hazard) this.toSafe();
       return;
     }
-    this.hp -= dmg;
+    this.hp = Math.round((this.hp - dmg) * 100) / 100;   // dano quebrado (ex.: 0,9) sem erro de arredondamento
     G.shake = 0.25;
     spawnParticles(this.x + this.w / 2, this.y + this.h / 2, 12, '#8a1a1a', { speed: 80, grav: 300, life: 0.5 });
     if (this.hp <= 0) { playerDied(); return; }
