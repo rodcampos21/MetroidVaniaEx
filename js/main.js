@@ -252,6 +252,7 @@ function startGame(fresh) {
   G.saveLock = true;
   document.getElementById('menu').classList.add('hidden');
   document.body.classList.remove('in-menu');
+  Input.endStep();   // a tecla que confirmou o menu não deve pular/pausar no jogo
   if (fresh) showBanner('As Catacumbas Esquecidas', 'Você desperta entre os mortos, com uma espada e nenhuma lembrança. Siga as tochas.', '#c8c0a8');
 }
 
@@ -259,11 +260,24 @@ function setupMenu() {
   const cont = document.getElementById('btnContinue');
   const fresh = document.getElementById('btnNew');
   if (readSave()) cont.classList.remove('hidden');
-  cont.addEventListener('click', () => startGame(false));
-  fresh.addEventListener('click', () => {
+  const items = () => [fresh, cont].filter(b => !b.classList.contains('hidden'));
+  let sel = 0;
+  const select = i => { const it = items(); sel = (i + it.length) % it.length; it.forEach((b, k) => b.classList.toggle('sel', k === sel)); };
+  const chooseNew = () => {
     if (readSave() && !confirm('Começar um jogo novo vai apagar o progresso salvo. Continuar?')) return;
     startGame(true);
+  };
+  cont.addEventListener('click', () => startGame(false));
+  fresh.addEventListener('click', chooseNew);
+  items().forEach((b, k) => b.addEventListener('pointerenter', () => select(k)));
+  // teclado: ↑/↓ escolhe, Enter/Espaço/Z confirma
+  addEventListener('keydown', e => {
+    if (G.state !== 'title') return;
+    if (['ArrowUp', 'KeyW'].includes(e.code)) { select(sel - 1); e.preventDefault(); }
+    else if (['ArrowDown', 'KeyS'].includes(e.code)) { select(sel + 1); e.preventDefault(); }
+    else if (['Enter', 'Space', 'KeyZ'].includes(e.code)) { e.preventDefault(); items()[sel].click(); }
   });
+  select(0);
 }
 
 // ---------- início ----------

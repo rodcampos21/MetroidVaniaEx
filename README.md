@@ -1,4 +1,4 @@
-# MetroidVania EX — As Catacumbas Esquecidas
+# Contos do Abismo
 
 Metroidvania em HTML/JavaScript puro (sem bibliotecas), feito com a ajuda do Claude.
 Funciona no navegador do computador e do celular (com controles de toque).
@@ -40,6 +40,7 @@ css/style.css     visual da página e dos botões
 js/rooms.js       MAPA: as salas desenhadas com letras (fácil de editar!)
 assets/hero.png   sprite do herói (recortado da folha de sprites)
 assets/hud_*.png  retrato com moldura e barra de vida
+assets/menu_*     arte do menu principal (fundo e faixa de seleção)
 js/hero.js        posições de cada pose dentro do hero.png
 js/themes.js      paleta e clima de cada sala
 js/pixel.js       ferramentas de pixel art por código
