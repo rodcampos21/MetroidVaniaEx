@@ -1,0 +1,17 @@
+{
+ "menu": {
+  "file": "menu.mp3",
+  "loopStart": 3.0,
+  "loopEnd": 41.4
+ },
+ "exploracao": {
+  "file": "exploracao.mp3",
+  "loopStart": 3.0,
+  "loopEnd": 89.4
+ },
+ "chefe": {
+  "file": "chefe.mp3",
+  "loopStart": 8.7143,
+  "loopEnd": 48.7143
+ }
+}

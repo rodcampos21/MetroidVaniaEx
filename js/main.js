@@ -276,6 +276,7 @@ function frame(now) {
   last = now;
   while (acc >= STEP) { update(STEP); Input.endStep(); acc -= STEP; }
   render();
+  Music.tick();
   requestAnimationFrame(frame);
 }
 
@@ -332,6 +333,12 @@ buildSprites();
 setupMenu();
 Controls.setup();
 KeyBinds.setup();
+Music.init();
+{
+  const vol = document.getElementById('musicVol');
+  vol.addEventListener('input', () => Music.setVolume(vol.value / 100));
+  Music.setVolume(Music.volume);
+}
 requestAnimationFrame(frame);
 // pinta as salas aos poucos enquanto o menu está aberto (deixa as transições suaves)
 (function prebuild(ids) {

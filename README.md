@@ -37,6 +37,18 @@ No começo de um jogo novo, um **tutorial** ensina os comandos (teclado ou toque
 - Estacas de ferro · blocos rachados · Fragmento de Vida
 - Retrato do herói com barra de vida (arte do autor), minimapa das salas visitadas, salvamento automático
 
+## Trilha sonora
+
+Música original, composta e sintetizada por código (sem samples) em `ferramentas/trilha/compor.py`:
+
+- **Menu** — prelúdio com chuva, piano e violão
+- **Exploração — "Contos do Abismo"** — piano em arpejos → tema no violão (cadência andaluza Ré m–Dó–Si♭–Lá) → órgão gótico com baixo galopando → rasgueado com coral
+- **Chefe — "Riff do Pecador"** — guitarra distorcida em drop D, órgão, coral e sino de igreja para a luta contra o Jorge
+
+Inspirada no *estilo* de cinco trilhas de metroidvania (nenhuma melodia copiada): Castlevania: Symphony of the Night ("Dracula's Castle"), Hollow Knight ("City of Tears"), Super Metroid ("Brinstar"/"Maridia"), Blasphemous e Dead Cells ("Prisoners' Awakening").
+As faixas repetem sem emenda, trocam sozinhas (menu → exploração → chefe) e ficam abafadas na pausa. Volume na tela de Controles; **M** liga/desliga no computador.
+Para regerar: `python3 ferramentas/trilha/compor.py` (precisa de Python com numpy/scipy e do ffmpeg).
+
 ## Estrutura
 
 ```
@@ -58,6 +70,9 @@ js/engine.js      física, colisão e partículas
 js/entities.js    jogador e inimigos
 js/tutorial.js    tutorial inicial e tela de controles
 js/keybinds.js    tela de remapear teclas (computador)
+js/audio.js       música (troca de faixa, loop sem emenda, volume)
+assets/musica/    faixas em mp3
+ferramentas/trilha/  compositor e sintetizador da trilha (Python)
 js/render.js      desenho de tudo na tela
 js/main.js        salas, itens, salvamento e loop do jogo
 ```
