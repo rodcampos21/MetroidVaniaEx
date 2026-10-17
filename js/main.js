@@ -56,6 +56,11 @@ function enterRoom(id, px, py) {
     }
   }
 
+  // chefe já vencido mas a recompensa ficou para trás: ela continua ao lado do corpo
+  if (def.boss === 'guitarist' && (G.data.bosses || {}).guitarist) {
+    const b = G.enemies.find(e => e instanceof GuitaristBoss);
+    if (b) dropBossReward(b, 0);
+  }
   if (!G.data.visited[id]) { G.data.visited[id] = true; writeSave(); }
   G.roomTitle = { text: def.name, t: 2.5 };
   const p = G.player;
@@ -106,6 +111,21 @@ function updateItems(dt) {
   const p = G.player;
   let onSave = false;
   for (const it of G.items) {
+    if (it.drop) {                    // recompensa do chefe: espera, salta e cai no chão
+      if (it.wait > 0) {
+        it.wait -= dt;
+        if (it.wait <= 0) { G.shake = Math.max(G.shake, 0.15); spawnParticles(it.x + 5, it.y + 5, 26, '#ffcf70', { speed: 120, life: 0.7 }); }
+        continue;
+      }
+      it.vy = Math.min(it.vy + 600 * dt, 260);
+      it.x += it.vx * dt; it.y += it.vy * dt;
+      const ty = Math.floor((it.y + it.h) / TILE), tx = Math.floor((it.x + 5) / TILE);
+      if (it.vy > 0 && (isSolid(tileAt(tx, ty)) || tileAt(tx, ty) === '=')) {
+        it.y = ty * TILE - it.h; it.vx = 0;
+        if (it.vy > 80) spawnParticles(it.x + 5, it.y + it.h, 8, '#d8a040', { angle: -Math.PI / 2, spread: 2, speed: 50, life: 0.4 });
+        it.vy = 0;
+      }
+    }
     if (it.type === 'heart') {        // corações que caem dos inimigos
       it.vy = Math.min((it.vy || 0) + 500 * dt, 200);
       it.y += it.vy * dt;
@@ -139,7 +159,7 @@ function updateItems(dt) {
         break;
       case 'H':
         collect(it, () => { G.data.abilities.dash = true; },
-          'Rolamento', ctrl('Aperte C para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.', 'Toque em ROLAR para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.'), '#ffb347');
+          'Rolamento desbloqueado', ctrl('A Palheta do Pecador vibra em sua mão. Aperte C para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.', 'A Palheta do Pecador vibra em sua mão. Toque em ROLAR para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.'), '#ffb347');
         break;
       case 'G':
         collect(it, () => { G.data.abilities.climb = true; },
@@ -191,9 +211,22 @@ function respawnAtSave() {
 }
 
 // ---------- loop ----------
+// botão ROLAR do celular fica trancado até derrotar o Jorge
+let rollBtn, rollWasLocked = null;
+function syncTouchLocks() {
+  rollBtn = rollBtn || document.querySelector('[data-act="dash"]');
+  if (!rollBtn || !G.data) return;
+  const locked = !G.data.abilities.dash;
+  if (locked === rollWasLocked) return;
+  rollBtn.classList.toggle('locked', locked);
+  if (rollWasLocked && !locked) { rollBtn.classList.add('unlocked'); setTimeout(() => rollBtn.classList.remove('unlocked'), 3000); }
+  rollWasLocked = locked;
+}
+
 function update(dt) {
   G.time += dt;
   if (G.state === 'title') return;
+  syncTouchLocks();
 
   if (Input.pressed.pause && G.state === 'play' && !Controls.open) { G.paused = true; Controls.show('pause'); }
   if (G.paused) return;

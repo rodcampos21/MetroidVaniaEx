@@ -216,7 +216,8 @@ class GuitaristBoss extends Enemy {
     closeBossGate(false);
     for (const e of G.enemies) if (e instanceof SonicNote || e instanceof Shockwave) e.dead = true;
     G.shake = 0.3;
-    showBanner('Chefe derrotado', 'Jorge, o Pecador, tocou seu último acorde. O portão se abre... e algo brilha no alto da galeria.', '#ff6a3a');
+    dropBossReward(this, 0.5);                // a Palheta salta do corpo logo depois que ele cai
+    showBanner('Chefe derrotado', 'Jorge, o Pecador, tocou seu último acorde. Algo escapa de suas mãos e cai no chão da galeria...', '#ff6a3a');
     G.banner.t = 6;
   }
 }
@@ -427,4 +428,14 @@ function drawBossUI() {
   ctx.fillStyle = '#ff7a50'; ctx.fillRect(x + 6, y + 6, Math.round(len * f), 2);
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x + 6 + len / 2, y + 6, 2, 14);   // marca da fase 2
   text(BOSS_NAME, x + W / 2, y + 32, { size: 20, font: FONT_T, weight: 800, align: 'center', color: '#e0c8b0', spacing: 3 });
+}
+
+// ---------- recompensa: Palheta do Pecador (libera o Rolamento) ----------
+const BOSS_REWARD_KEY = 'galeria:jorge';
+function dropBossReward(boss, wait) {
+  if (G.data.collected[BOSS_REWARD_KEY]) return;
+  const cx = boss.x + boss.w / 2;
+  const toMid = cx < G.room.pw / 2 ? 1 : -1;            // salta para o lado mais aberto da arena
+  G.items.push({ type: 'H', key: BOSS_REWARD_KEY, x: cx - 5, y: boss.y + 8, w: 10, h: 10,
+    drop: true, wait, vx: wait ? toMid * 40 : 0, vy: wait ? -230 : 0, reward: true });
 }

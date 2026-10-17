@@ -111,6 +111,25 @@ function relicSprite(base, light, dark) {
     b.set(11, 15, C('#ffffff')); b.set(10, 16, C('#ffffff'));
   }, { light: '#d8d4cc' });
 }
+// Palheta do Pecador: recompensa do Jorge (libera o Rolamento)
+function pickSprite() {
+  return makeSprite(36, 46, b => {
+    const pick = (s, c) => {                    // palheta: topo arredondado, ponta para baixo
+      b.ellipse(11, 13, 9 - s, 9 - s, c); b.ellipse(25, 13, 9 - s, 9 - s, c);
+      b.poly([[2 + s, 14], [34 - s, 14], [18, 43 - s * 1.6]], c);
+      b.rect(11, 4 + s, 14, 10, c);
+    };
+    pick(0, C('#7a4a14'));                      // aro de ouro velho
+    pick(1, C('#d8a040'));
+    pick(3, C('#5a0a14'));                      // corpo vermelho-sangue
+    pick(4, C('#9a1424'));
+    b.ellipse(12, 12, 4, 4, C('#d83040'));     // reflexo
+    b.ellipse(11, 11, 1.6, 1.6, C('#ff8a8a'));
+    b.poly([[20, 9], [13, 22], [18, 22], [15, 33], [24, 18], [19, 18], [23, 9]], C('#ffe6a0'));   // raio gravado
+    b.poly([[21, 10], [15, 21], [19, 21], [17, 29], [22, 19], [18, 19], [22, 10]], C('#fff8e0'));
+    b.set(29, 9, C('#fff0c0')); b.set(30, 10, C('#fff0c0'));
+  }, { light: '#d8d4cc' });
+}
 function lifeShardSprite() {
   return makeSprite(36, 44, b => {
     b.poly([[17, 2], [25, 18], [20, 40], [11, 40], [9, 16]], C('#b0182c'));
@@ -250,7 +269,7 @@ function buildSprites() {
   SPR.bat = [0, 1, 2].map(k => batFrame(k, false).canvas());
   SPR.batHit = batFrame(1, true).canvas();
   SPR.relicD = relicSprite('#3ab0d8', '#9ff0ff', '#1c6a8a').canvas();
-  SPR.relicH = relicSprite('#e08a2a', '#ffd28a', '#8a4a14').canvas();
+  SPR.relicH = pickSprite().canvas();
   SPR.relicG = relicSprite('#8a5ae0', '#d0b8ff', '#4a2a8a').canvas();
   SPR.life = lifeShardSprite().canvas();
   SPR.soul = soulSprite().canvas();

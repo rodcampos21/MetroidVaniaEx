@@ -116,7 +116,7 @@ class Player {
       this.vx = this.facing * PHYS.DASH_SPEED;
       this.vy = 0;
       if (Math.floor(this.dashT * 60) % 4 === 0)
-        this.trail.push({ pose: 'roll', x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() });
+        { const rp = this.rollPose(); if (rp !== 'crouch') this.trail.push({ pose: rp, x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() }); }
       if (this.onGround && Math.random() < 0.5)
         G.particles.push({ x: this.x + this.w / 2, y: this.y + this.h - 1, vx: -this.facing * 30, vy: -10, life: 0.35, max: 0.35, color: '#5a5a50', size: 2, grav: 0 });
       if (this.dashT <= 0) this.vx = this.facing * PHYS.RUN;
@@ -252,7 +252,17 @@ class Player {
     }
   }
 
-  rollAngle() { return (1 - this.dashT / PHYS.DASH_TIME) * Math.PI * 2 * this.facing; }
+  // rolamento: agacha (0–12%), cambalhota completa (12–88%) e aterrissa agachado
+  rollProg() { return 1 - this.dashT / PHYS.DASH_TIME; }
+  rollPose() {
+    const q = this.rollProg();
+    if (q < 0.12 || q > 0.88) return 'crouch';
+    return q > 0.3 && q < 0.7 ? 'roll_tuck' : 'roll';
+  }
+  rollAngle() {
+    const q = Math.min(1, Math.max(0, (this.rollProg() - 0.12) / 0.76));
+    return (Math.PI + q * Math.PI * 2) * this.facing;     // o quadro 'roll' é de cabeça para baixo
+  }
 
   toSafe() {
     this.x = this.safe.x; this.y = this.safe.y;

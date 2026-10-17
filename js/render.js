@@ -108,9 +108,10 @@ function gatherLights() {
     else if (e instanceof SonicNote) L.push({ x: e.x + 5, y: e.y + 5, r: 34, a: 0.8, col: [255, 50, 50] });
     else if (e instanceof Shockwave) L.push({ x: e.x + 6, y: e.y + 6, r: 40, a: 0.8, col: [255, 140, 60] });
   for (const it of G.items) {
+    if (it.wait > 0) continue;
     if (it.type === 'save') L.push({ x: it.x + 8, y: it.y + 2, r: 90, a: 1, col: [255, 140, 50], flick: 1 });
     else if (it.type === 'D') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [120, 220, 255] });
-    else if (it.type === 'H') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [255, 170, 70] });
+    else if (it.type === 'H') L.push({ x: it.x + 5, y: it.y + 5, r: it.reward ? 64 : 46, a: 0.95, col: [255, 120, 70] });
     else if (it.type === 'G') L.push({ x: it.x + 5, y: it.y + 5, r: 46, a: 0.9, col: [180, 130, 255] });
     else if (it.type === '+') L.push({ x: it.x + 5, y: it.y + 5, r: 40, a: 0.9, col: [255, 60, 80] });
     else if (it.type === 'E') L.push({ x: it.x + 5, y: it.y + 4, r: 80, a: 1, col: [120, 200, 255] });
@@ -224,6 +225,7 @@ function drawCracked() {
 function drawItems() {
   const t = G.time;
   for (const it of G.items) {
+    if (it.wait > 0) continue;
     const bob = Math.round(Math.sin(t * 2.5 + it.x) * 4);
     if (it.type === 'save') {
       const cx = (it.x + 8) * AP, by = (it.y + 16) * AP;
@@ -232,6 +234,15 @@ function drawItems() {
       ctx.drawImage(fr[Math.floor(t * 12) % fr.length], cx - 13, by - 74 + 28 - 32);
     } else if (it.type === 'D' || it.type === 'H' || it.type === 'G') {
       const s = it.type === 'D' ? SPR.relicD : it.type === 'H' ? SPR.relicH : SPR.relicG;
+      if (it.reward && it.vy === 0) {           // feixe de luz sobre a recompensa do chefe
+        const cx = (it.x + 5) * AP, by = (it.y + it.h) * AP;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createLinearGradient(0, by - 150, 0, by);
+        g.addColorStop(0, 'rgba(255,90,60,0)'); g.addColorStop(1, `rgba(255,150,80,${0.22 + 0.08 * Math.sin(t * 4)})`);
+        ctx.fillStyle = g; ctx.fillRect(cx - 14, by - 150, 28, 150);
+        ctx.restore();
+        if (Math.random() < 0.3) spawnParticles(it.x + 5 + (Math.random() - 0.5) * 8, it.y + it.h, 1, '#ffb070', { angle: -Math.PI / 2, spread: 0.3, speed: 30, life: 0.9, size: 1 });
+      }
       ctx.drawImage(s, (it.x + 5) * AP - 18, (it.y + 5) * AP - 23 + bob);
     } else if (it.type === '+') {
       ctx.drawImage(SPR.life, (it.x + 5) * AP - 18, (it.y + 5) * AP - 22 + bob);
@@ -364,7 +375,7 @@ function shadowAt(x, y, w) {
 
 function heroPose(p) {
   if (p.wall) return 'wall' + (Math.floor(p.climbAnim / 10) % 2);
-  if (p.dashT > 0) return 'roll';
+  if (p.dashT > 0) return p.rollPose();
   if (p.stun > 0) return 'hurt';
   if (p.atkKind) {
     const ph = p.atkPhase();
@@ -426,7 +437,7 @@ function drawPlayer() {
   }
   shadowAt(cx, fy, p.onGround ? 26 : 16);
   const bob = pose === 'idle' && Math.sin(G.time * 2.6) > 0.6 ? -1 : 0;
-  drawHero(pose, cx, fy, p.facing, pose === 'roll' ? p.rollAngle() : 0, alpha, bob);
+  drawHero(pose, cx, fy, p.facing, pose.startsWith('roll') ? p.rollAngle() : 0, alpha, bob);
   // efeitos dos golpes
   if (p.atkKind && p.atkPhase() >= 1) {
     const a = ATK[p.atkKind], prog = 1 - (p.atkT - (a.hitTo - 0.06)) / (a.hitFrom - a.hitTo + 0.06);

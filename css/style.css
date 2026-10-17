@@ -29,14 +29,14 @@ canvas#game {
 }
 #menu::before {                    /* preenche as sobras da tela com a própria arte desfocada */
   content: ""; position: absolute; inset: -40px;
-  background: url(../assets/menu_bg.jpg?v=20261017153103) center / cover no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017154107) center / cover no-repeat;
   filter: blur(18px) brightness(.45);
 }
 #menu .stage {
   position: relative; container-type: inline-size;
   width: min(100vw, calc(100dvh * 2576 / 1405));
   aspect-ratio: 2576 / 1405;
-  background: url(../assets/menu_bg.jpg?v=20261017153103) center / 100% 100% no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261017154107) center / 100% 100% no-repeat;
   box-shadow: 0 0 60px rgba(0, 0, 0, .7);
 }
 /* brilho da joia da espada */
@@ -68,7 +68,7 @@ canvas#game {
 }
 #menu .item::before {             /* faixa vermelha com o dragão (só na opção selecionada) */
   content: ""; position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 540 / 145;
-  background: url(../assets/menu_band.png?v=20261017153103) 0 0 / 100% 100% no-repeat;
+  background: url(../assets/menu_band.png?v=20261017154107) 0 0 / 100% 100% no-repeat;
   opacity: 0; transition: opacity .15s; z-index: -1;
 }
 #menu .item.sel { color: #f0dfcc; }
@@ -221,3 +221,8 @@ body.in-menu #touch { display: none !important; }
 #controls .mini.dpad.demo .arr.right { margin: -6px 0 0 21px;  border-left: 8px solid #cfc6b0; border-right-width: 0; }
 #controls .mini.dpad.demo .nub { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px; border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #8a909a, #3d424a 60%, #1a1d21); border: 2px solid #000; }
+
+/* botão ROLAR trancado até vencer o chefe */
+#buttons button.locked { filter: grayscale(1) brightness(.55); opacity: .45; font-size: 0 !important; }
+#buttons button.locked::after { content: "🔒"; font-size: 20px; }
+#buttons button.unlocked { animation: tuthint .8s ease-in-out 4; }

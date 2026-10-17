@@ -14,7 +14,7 @@ Abra o `index.html` no navegador — ou, se o GitHub Pages estiver ativado, aces
 | Pular | Z / Espaço | ▲ |
 | Atacar (aperte 2× para o combo: corte para baixo + corte para cima) | X | ⚔ |
 | Dash (arrancada no chão) | Shift / V | DASH |
-| Rolar (depois de pegar) | C / Shift | ROLAR |
+| Rolar (depois de vencer Jorge O Pecador) | C / Shift | ROLAR |
 | Agachar (atacar agachado = estocada) | ↓ | direcional pra baixo |
 | Escalar (depois de pegar as Garras) | pule na parede e segure a direção · ↑/↓ sobe/desce · pular = salto de parede | igual, com o direcional |
 | Descer da plataforma de madeira | ↓ + pular | direcional pra baixo + ▲ |
@@ -30,8 +30,8 @@ No começo de um jogo novo, um **tutorial** ensina os comandos (teclado ou toque
 - Herói com o sprite do autor, sem a borda branca: parado, corrida em 6 quadros, pulo, combo de espada (ergue → corta para baixo → corta para cima), agachado, estocada, ferido, rolamento, dash e escalada
 - Inimigos: **Lobisomem** (arte do autor) — patrulha, uiva ao ver o herói, avança num dash e ataca com combo de garradas — e Morcego
 - 6 salas: Catacumbas Esquecidas, Poço das Correntes, Galeria Submersa, Torre Arruinada, Ponte sobre o Abismo e Torre do Vigia (só com escalada)
-- Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo), **Rolamento** (rola sem levar dano) e **Garras do Vigia** (escalar e saltar de paredes)
-- **Chefe: Jorge O Pecador, o Guitarrista Hardcore** (Galeria Submersa), com retrato na apresentação e animação de morte — — guitarrada que esmaga o chão com ondas de choque e riff que dispara notas musicais teleguiadas; fase 2 com metade da vida; guarda o Salto Etéreo
+- Poderes que abrem caminhos: **Salto Etéreo** (pulo duplo), **Rolamento** (rola sem levar dano — recompensa por derrotar Jorge: a Palheta do Pecador) e **Garras do Vigia** (escalar e saltar de paredes)
+- **Chefe: Jorge O Pecador, o Guitarrista Hardcore** (Galeria Submersa), com retrato na apresentação e animação de morte — — guitarrada que esmaga o chão com ondas de choque e riff que dispara notas musicais teleguiadas; fase 2 com metade da vida; ao morrer deixa cair a **Palheta do Pecador**, que libera o Rolamento
 - Estacas de ferro · blocos rachados · Fragmento de Vida
 - Retrato do herói com barra de vida (arte do autor), minimapa das salas visitadas, salvamento automático
 
