@@ -9,7 +9,8 @@
 //   #  parede / chão          =  plataforma (atravessa por baixo)
 //   ^  estacas de ferro       B  bloco rachado (quebra no ataque)
 //   @  início do jogador      P  braseiro (salvamento)
-//   W  inimigo: Esqueleto     F  inimigo voador: Morcego
+//   W  inimigo: Lobisomem     F  inimigo voador: Morcego
+//   V  inimigo: Valentão (o do tutorial)
 //   D  item: Salto Etéreo     H  item: Rolamento
 //   +  item: Fragmento de Vida E  fim da demo (portal)
 //   G  item: Garras (escalar paredes)
@@ -30,7 +31,7 @@ const ROOMS = {
       '#...........===...............###......#',
       '#..............................#.......#',
       '#.......................................',
-      '#..@...P.......W........................',
+      '#..@...P.............V..........W.......',
       '#.......................................',
       '########################################',
     ],

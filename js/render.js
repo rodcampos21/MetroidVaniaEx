@@ -103,7 +103,8 @@ function gatherLights() {
   if (G.state !== 'dead') L.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, r: 80, a: 0.9, col: null });
   for (const l of art.lights) L.push(l);
   for (const e of G.enemies)                       // o lobisomem fica visível na penumbra
-    if (e instanceof Werewolf && e.state !== 'dying') L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 52, a: 0.6, col: null });
+    if (e instanceof Brawler) { if (e.state !== 'dying') L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 46, a: 0.55, col: null }); }
+    else if (e instanceof Werewolf && e.state !== 'dying') L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 52, a: 0.6, col: null });
     else if (e instanceof GuitaristBoss) L.push({ x: e.x + e.w / 2, y: e.y + e.h * 0.4, r: 96, a: 0.75, col: e.boom > 0 ? [255, 120, 40] : null });
     else if (e instanceof SonicNote) L.push({ x: e.x + 5, y: e.y + 5, r: 34, a: 0.8, col: [255, 50, 50] });
     else if (e instanceof Shockwave) L.push({ x: e.x + 6, y: e.y + 6, r: 40, a: 0.8, col: [255, 140, 60] });
@@ -274,6 +275,8 @@ function drawEnemy(e) {
   const flash = e.flash > 0;
   if (e instanceof Werewolf) {
     drawWerewolf(e);
+  } else if (e instanceof Brawler) {
+    drawBrawler(e);
   } else if (e instanceof GuitaristBoss) {
     drawBoss(e);
   } else if (e instanceof SonicNote) {
@@ -309,6 +312,42 @@ function drawWolfFrame(fi, ax, ay, dir, rot, img, alpha = 1, sx = 1, sy = 1) {
   if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
   ctx.drawImage(img, x, y, w, h, -Math.round(cx), -Math.round(cy), w, h);
   ctx.restore();
+}
+let brawlerWhite = null;
+function drawBrawler(e) {
+  if (!brawlerImg.complete) return;
+  if (!brawlerWhite) {
+    brawlerWhite = document.createElement('canvas'); brawlerWhite.width = brawlerImg.width; brawlerWhite.height = brawlerImg.height;
+    const g = brawlerWhite.getContext('2d'); g.drawImage(brawlerImg, 0, 0);
+    g.globalCompositeOperation = 'source-atop'; g.fillStyle = '#fff'; g.fillRect(0, 0, brawlerWhite.width, brawlerWhite.height);
+  }
+  const ax = (e.x + e.w / 2) * AP, ay = (e.y + e.h) * AP;
+  let fi = 'b0', rot = 0, sy = 1, alpha = 1;
+  const moving = Math.abs(e.vx) > 1;
+  if (e.state === 'punch') fi = BRAWLER_PUNCH[e.pi][0];
+  else if (e.state === 'dying') { fi = 'b0'; rot = -Math.min(1.45, e.st * 3.2); alpha = Math.max(0, 1 - Math.max(0, e.st - 0.6) / 0.4); }
+  else if (e.state === 'stagger' || e.kb > 0) { fi = 'p1'; rot = -0.12; }
+  else if (moving) fi = 'b' + (Math.floor(e.walk / 3.5) % 8);
+  else sy = 1 + Math.sin(G.time * 2.6 + e.home) * 0.012;           // respirando
+  shadowAt(ax, ay, 26);
+  const [x, y, w, h, cx, cy] = BRAWLER_FRAMES[fi];
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(Math.round(ax), Math.round(ay));
+  if (e.dir < 0) ctx.scale(-1, 1);
+  if (rot) ctx.rotate(rot);
+  if (sy !== 1) ctx.scale(1, sy);
+  ctx.drawImage(e.flash > 0 ? brawlerWhite : brawlerImg, x, y, w, h, -Math.round(cx), -Math.round(cy), w, h);
+  ctx.restore();
+  // impacto do soco
+  const f = e.state === 'punch' && BRAWLER_PUNCH[e.pi];
+  if (f && f[2] && e.st < 0.08) {
+    const b = e.punchBox(), px = (e.dir > 0 ? b.x + b.w : b.x) * AP, py = (b.y + b.h / 2) * AP;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 22);
+    g.addColorStop(0, 'rgba(255,240,200,0.9)'); g.addColorStop(1, 'rgba(255,160,80,0)');
+    ctx.fillStyle = g; ctx.fillRect(px - 22, py - 22, 44, 44); ctx.restore();
+  }
 }
 function drawWerewolf(e) {
   if (!wolfImg.complete) return;

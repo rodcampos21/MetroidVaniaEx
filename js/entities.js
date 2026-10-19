@@ -452,6 +452,109 @@ class Werewolf extends Enemy {
   }
 }
 
+// VALENTÃO (arte do autor): anda de braços cruzados; quando o herói chega perto,
+// encara, se aproxima e solta um soco duplo (jab + soco com passo à frente).
+// Inimigo do tutorial: fraco, lento e avisa bem antes de bater.
+const BRAWLER = {
+  W: 14, H: 30, HP: 4,
+  PATROL: 20, APPROACH: 34, SIGHT_X: 110, SIGHT_Y: 30,
+  PUNCH_RANGE: 26, PUNCH_CD: 1.1,
+};
+// [quadro, duração, golpe ativo?]
+const BRAWLER_PUNCH = [['p0', 0.16], ['p1', 0.32], ['p2', 0.07], ['p3', 0.16, true], ['p2', 0.08],
+  ['p6', 0.12], ['p7', 0.16, true], ['p1', 0.22], ['b0', 0.4]];
+class Brawler extends Enemy {
+  constructor(x, y) {
+    super(x, y - (BRAWLER.H - TILE), BRAWLER.W, BRAWLER.H, BRAWLER.HP);
+    this.dir = -1; this.color = '#2a2a30';
+    this.home = this.x; this.state = 'patrol'; this.st = 0; this.walk = 0;
+    this.pause = 1 + Math.random(); this.cd = 0; this.pi = 0; this.seen = 0;
+  }
+  set(s) { this.state = s; this.st = 0; }
+  frame() { return this.state === 'punch' ? BRAWLER_PUNCH[this.pi] : null; }
+  // só fica bravo quando o tutorial chega na parte dele (ou se apanhar)
+  calm() { return !this.angry && Tutorial.active() && Tutorial.enemyStep() > Tutorial.step; }
+  punchBox() {
+    const w = 20, h = 12;
+    return { x: this.dir > 0 ? this.x + this.w - 2 : this.x + 2 - w, y: this.y + 6, w, h };
+  }
+  touches(p) {
+    if (this.state === 'dying') return false;
+    const f = this.frame();
+    if (f && f[2] && overlaps(p, this.punchBox())) return true;
+    return false;                                          // encostar nele não machuca
+  }
+  hurt(dmg, dir) {
+    if (this.state === 'dying') return;
+    this.hp -= dmg; this.flash = 0.12; this.angry = true; this.seen = 3;
+    G.shake = Math.max(G.shake, 0.07);
+    spawnParticles(this.x + this.w / 2, this.y + 10, 8, '#c8a080', { speed: 80, grav: 300, size: 2, life: 0.4 });
+    if (this.hp <= 0) {
+      this.set('dying'); this.vx = dir * 70; this.vy = -110; this.fallDir = dir;
+      return;
+    }
+    // apanhar enquanto prepara o soco cancela o ataque (atacar primeiro compensa)
+    if (this.state !== 'punch' || this.pi <= 1) { this.set('stagger'); this.kb = 0.25; this.vx = dir * 90; this.dir = -dir; }
+  }
+  update(dt) {
+    const p = G.player;
+    this.t += dt; this.st += dt; this.flash -= dt; this.cd = Math.max(0, this.cd - dt);
+    const cx = this.x + this.w / 2, dx = p.x + p.w / 2 - cx, adx = Math.abs(dx);
+    const dy = Math.abs(p.y + p.h - (this.y + this.h));
+    const sees = G.state === 'play' && adx < BRAWLER.SIGHT_X && dy < BRAWLER.SIGHT_Y && !this.calm();
+    this.seen = sees ? 2 : Math.max(0, this.seen - dt);
+    let speed = 0;
+    switch (this.state) {
+      case 'patrol':
+        if (this.calm()) { if (adx < 60) this.dir = Math.sign(dx) || this.dir; break; }   // parado, só encara
+        if (this.pause > 0) this.pause -= dt;
+        else {
+          speed = BRAWLER.PATROL;
+          if (Math.abs(this.x - this.home) > 40 && Math.sign(this.x - this.home) === this.dir) { this.dir = -this.dir; this.pause = 1.2; }
+          if (this.hitWallX || (this.onGround && !this.groundAhead())) { this.dir = -this.dir; this.pause = 1; }
+        }
+        if (this.seen > 0) this.set('approach');
+        break;
+      case 'approach':
+        if (adx > 2) this.dir = Math.sign(dx);
+        speed = adx > BRAWLER.PUNCH_RANGE - 4 && this.groundAhead() ? BRAWLER.APPROACH : 0;
+        if (adx < BRAWLER.PUNCH_RANGE && this.cd <= 0) { this.set('punch'); this.pi = 0; }
+        if (this.seen <= 0) this.set('patrol');
+        break;
+      case 'punch': {
+        const f = BRAWLER_PUNCH[this.pi];
+        if (f[0] === 'p6' || f[0] === 'p7') speed = 55;            // passo à frente no 2º soco
+        if (this.st >= f[1]) {
+          this.st = 0; this.pi++;
+          if (BRAWLER_PUNCH[this.pi] && BRAWLER_PUNCH[this.pi][2]) G.shake = Math.max(G.shake, 0.05);
+          if (this.pi >= BRAWLER_PUNCH.length) { this.cd = BRAWLER.PUNCH_CD; this.set(this.seen > 0 ? 'approach' : 'patrol'); }
+        }
+        break;
+      }
+      case 'stagger':
+        if (this.st > 0.4) this.set('approach');
+        break;
+      case 'dying':
+        if (this.st > 1.0) {
+          this.dead = true;
+          if (Math.random() < 0.7) G.items.push({ type: 'heart', x: cx - 4, y: this.y + 10, w: 8, h: 8, vy: -80 });
+        }
+        break;
+    }
+    if (this.kb > 0) { this.kb -= dt; this.vx = approach(this.vx, 0, 500 * dt); }
+    else if (this.state === 'dying') this.vx = approach(this.vx, 0, 200 * dt);
+    else this.vx = this.dir * speed;
+    this.vy = Math.min(this.vy + PHYS.GRAVITY * dt, PHYS.MAX_FALL);
+    moveBody(this, dt);
+    this.walk += Math.abs(this.vx) * dt;
+  }
+  groundAhead() {
+    const ahead = this.dir > 0 ? this.x + this.w + 2 : this.x - 2;
+    const below = tileAt(Math.floor(ahead / TILE), Math.floor((this.y + this.h + 1) / TILE));
+    return isSolid(below) || below === '=';
+  }
+}
+
 // MORCEGO: flutua e persegue o jogador quando ele chega perto (atravessa paredes)
 class Flyer extends Enemy {
   constructor(x, y) { super(x, y, 12, 10, 2); this.color = '#3b2830'; }
