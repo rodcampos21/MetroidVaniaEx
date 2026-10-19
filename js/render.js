@@ -376,7 +376,10 @@ function shadowAt(x, y, w) {
 
 // poses do Rod (socos/chutes, esquiva com dash, pulo em fases)
 function rodPose(p) {
-  if (p.wall) return 'jump4';
+  // agachar: desce (crouch2→4) e, ao soltar, levanta (crouch5→6)
+  if (p.crouch) { if (p._cStart == null) p._cStart = G.time; p._uStart = null; }
+  else if (p._cStart != null) { p._cStart = null; p._uStart = G.time; }
+  if (p.wall) return 'climb' + (Math.floor(p.climbAnim / 6) % 8);
   if (p.dashT > 0) return p.rollPose();
   if (p.stun > 0) return p.stun > 0.12 ? 'hurt0' : 'hurt1';
   if (p.atkKind) {
@@ -384,7 +387,8 @@ function rodPose(p) {
     const seq = p.atkKind === 'kick' ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6];
     return p.atkKind + seq[Math.min(5, Math.floor(prog * 6))];
   }
-  if (p.crouch) return 'jump6';
+  if (p.crouch) { const t = G.time - p._cStart; return t < 0.04 ? 'crouch2' : t < 0.08 ? 'crouch3' : 'crouch4'; }
+  if (p._uStart != null && p.onGround && Math.abs(p.vx) < 15 && G.time - p._uStart < 0.1) return G.time - p._uStart < 0.05 ? 'crouch5' : 'crouch6';
   if (p.sprintT > 0) return 'dash' + (Math.floor(G.time * 20) % 2 ? 4 : 3);
   if (!p.onGround) return p.vy < -150 ? 'jump2' : p.vy < 90 ? 'jump3' : 'jump4';
   if (Math.abs(p.vx) > 15) return 'walk' + (Math.floor(p.anim / 7) % 8);
@@ -469,8 +473,8 @@ function drawPlayer() {
   const pose = heroPose(p);
   const alpha = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0 ? 0.35 : 1;
   if (p.wall && isRod()) {                                 // Rod agarrado: encosta na parede
-    const wx = p.wall < 0 ? p.x * AP + 14 : (p.x + p.w) * AP - 14;
-    drawRod('jump4', wx, Math.round((p.y + p.h) * AP), p.wall, alpha, p.wall * -0.15);
+    const wx = p.wall < 0 ? p.x * AP + 16 : (p.x + p.w) * AP - 16;
+    drawRod(pose, wx, Math.round((p.y + p.h) * AP) + 8, p.wall, alpha);
     return;
   }
   if (p.wall) {
