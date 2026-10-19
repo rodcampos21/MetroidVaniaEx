@@ -55,14 +55,6 @@ const TUT_STEPS = [
     done: (p, s) => s.crouched > 0.35,
   },
   {
-    title: 'Inimigo',
-    keys: 'Um valentão bloqueia o caminho! Chegue perto e acerte com [@attack1] antes que ele solte o soco.',
-    touch: 'Um valentão bloqueia o caminho! Chegue perto e acerte com {attack} antes que ele solte o soco.',
-    hint: 'attack',
-    enemy: true,
-    done: () => !G.enemies.some(e => e instanceof Brawler && e.state !== 'dying'),
-  },
-  {
     title: 'Pronto!',
     keys: 'Toque nos braseiros para salvar e curar. [Esc] pausa e mostra todos os controles.',
     touch: 'Toque nos braseiros para salvar e curar. {pause} pausa e mostra todos os controles.',
@@ -82,7 +74,6 @@ const Tutorial = {
     if (save && G.data) { G.data.tutorialDone = true; writeSave(); }
   },
   active() { return this.step >= 0; },
-  enemyStep() { return TUT_STEPS.findIndex(s => s.enemy); },
   resetStats() { this.stats = { walked: 0, jumped: false, attacked: false, combo: false, sprinted: false, crouched: 0, t: 0 }; },
 
   update(dt) {

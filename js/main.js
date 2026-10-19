@@ -41,7 +41,6 @@ function enterRoom(id, px, py) {
       switch (c) {
         case '@': if (px == null) { px = x + 3; py = y + TILE - G.player.h; } break;
         case 'W': G.enemies.push(new Werewolf(x - 3, y)); break;
-        case 'V': G.enemies.push(new Brawler(x + 1, y)); break;
         case 'F': G.enemies.push(new Flyer(x + 2, y + 3)); break;
         case 'K': G.enemies.push(new GuitaristBoss(x, y, !!(G.data.bosses || {}).guitarist)); break;   // vencido: só o corpo
         case 'P': {                       // o braseiro fica apoiado no chão
