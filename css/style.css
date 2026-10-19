@@ -29,14 +29,14 @@ canvas#game {
 }
 #menu::before {                    /* preenche as sobras da tela com a própria arte desfocada */
   content: ""; position: absolute; inset: -40px;
-  background: url(../assets/menu_bg.jpg?v=20261017164253) center / cover no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261019152327) center / cover no-repeat;
   filter: blur(18px) brightness(.45);
 }
 #menu .stage {
   position: relative; container-type: inline-size;
   width: min(100vw, calc(100dvh * 2576 / 1405));
   aspect-ratio: 2576 / 1405;
-  background: url(../assets/menu_bg.jpg?v=20261017164253) center / 100% 100% no-repeat;
+  background: url(../assets/menu_bg.jpg?v=20261019152327) center / 100% 100% no-repeat;
   box-shadow: 0 0 60px rgba(0, 0, 0, .7);
 }
 /* brilho da joia da espada */
@@ -68,7 +68,7 @@ canvas#game {
 }
 #menu .item::before {             /* faixa vermelha com o dragão (só na opção selecionada) */
   content: ""; position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 540 / 145;
-  background: url(../assets/menu_band.png?v=20261017164253) 0 0 / 100% 100% no-repeat;
+  background: url(../assets/menu_band.png?v=20261019152327) 0 0 / 100% 100% no-repeat;
   opacity: 0; transition: opacity .15s; z-index: -1;
 }
 #menu .item.sel { color: #f0dfcc; }
@@ -280,3 +280,31 @@ body.in-menu #touch { display: none !important; }
   font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 1px; opacity: 0; transition: opacity .25s;
 }
 #toast.show { opacity: 1; }
+
+/* ---------- escolha do personagem ---------- */
+#heroSelect {
+  position: fixed; inset: 0; z-index: 32; display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 2, 6, .97); padding: 12px;
+}
+#heroSelect.hidden { display: none; }
+#heroSelect .hs-box { width: min(720px, 100%); max-height: 100%; overflow-y: auto; text-align: center; }
+#heroSelect h2 { margin: 0 0 14px; font-family: "Cinzel", serif; letter-spacing: 4px; text-transform: uppercase; color: #e8c890; font-size: clamp(18px, 4vw, 28px); }
+#heroSelect .hs-cards { display: flex; gap: 18px; justify-content: center; }
+#heroSelect .hero-card {
+  flex: 1 1 0; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 14px 14px; cursor: pointer; color: #d8d0b8; font-family: "Alegreya Sans", sans-serif;
+  background: linear-gradient(#141218, #0b0a0d); border: 2px solid #4a4f57; outline: 3px solid #000;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+#heroSelect .hero-card canvas { width: 100%; max-width: 220px; height: auto; aspect-ratio: 220 / 200; image-rendering: pixelated;
+  background: radial-gradient(ellipse at 50% 85%, rgba(255,170,90,.18), transparent 60%); }
+#heroSelect .hero-card b { font-family: "Cinzel", serif; font-size: 22px; color: #f0e4cc; letter-spacing: 2px; }
+#heroSelect .hero-card span { font-size: 14px; color: #a8a090; line-height: 1.35; }
+#heroSelect .hero-card i { font-style: normal; font-size: 13px; color: #e8c890; }
+#heroSelect .hero-card.sel { border-color: #b0302a; transform: translateY(-3px); box-shadow: 0 0 30px rgba(176, 48, 42, .35); }
+#heroSelect .hs-help { color: #7a7466; font-size: 13px; margin: 12px 0 0; }
+#heroSelect .ctl-btns { display: flex; justify-content: center; margin-top: 10px; }
+#heroSelect .ctl-btns button { font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; font-size: 15px;
+  padding: 10px 20px; color: #d8d0b8; background: linear-gradient(#22282c, #12161a); border: 2px solid #4a4f57; cursor: pointer; }
+@media (hover: none) and (pointer: coarse) { #heroSelect .hs-help { display: none; } #heroSelect .hero-card span { font-size: 12px; } }
+@media (max-height: 460px) { #heroSelect .hero-card canvas { max-width: 130px; } #heroSelect h2 { margin-bottom: 6px; } }

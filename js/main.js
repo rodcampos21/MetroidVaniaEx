@@ -4,9 +4,10 @@
 
 const SAVE_KEY = 'metroidvaniaex_save_v3';
 
-function newData() {
+function newData(hero = 'espadachim') {
   return {
-    abilities: { doubleJump: false, dash: false, climb: false },
+    hero,                                                   // 'espadachim' ou 'rod'
+    abilities: { doubleJump: false, dash: hero === 'rod', climb: false },   // Rod já começa com a esquiva
     maxHp: 5,
     collected: {},
     visited: {},
@@ -158,6 +159,11 @@ function updateItems(dt) {
           'Salto Etéreo', ctrl(`Uma força antiga corre em suas pernas. Aperte ${Input.label('jump')} (pular) no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.`, 'Uma força antiga corre em suas pernas. Toque em ▲ no ar para saltar outra vez — o Poço das Correntes não é mais intransponível.'), '#7fe0ff');
         break;
       case 'H':
+        if (isRod()) {   // Rod já sabe se esquivar: a palheta aumenta a vida máxima
+          collect(it, () => { G.data.maxHp++; p.hp = G.data.maxHp; },
+            'Palheta do Pecador', 'A palheta de Jorge pulsa como um coração em sua mão. Sua vida máxima aumentou.', '#ff6a3a');
+          break;
+        }
         collect(it, () => { G.data.abilities.dash = true; },
           'Rolamento desbloqueado', ctrl(`A Palheta do Pecador vibra em sua mão. Aperte ${Input.label('dash')} para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.`, 'A Palheta do Pecador vibra em sua mão. Toque em ROLAR para rolar para a frente, até no ar. Durante o rolamento, ataques inimigos não te atingem.'), '#ffb347');
         break;
@@ -211,6 +217,56 @@ function respawnAtSave() {
 }
 
 // ---------- loop ----------
+// botões do celular e textos que mudam conforme o personagem
+function applyHeroUI() {
+  const rod = isRod();
+  const atk = document.querySelector('[data-act="attack"]'), roll = document.querySelector('[data-act="dash"]');
+  if (atk) atk.textContent = rod ? '✊' : '⚔';
+  if (roll) roll.textContent = rod ? 'ESQUIVA' : 'ROLAR';
+}
+
+// ---------- seleção de personagem ----------
+const HeroSelect = {
+  open: false, sel: 0, heroes: ['espadachim', 'rod'],
+  show() {
+    this.open = true; this.sel = 0;
+    document.getElementById('heroSelect').classList.remove('hidden');
+    this.mark(); this.animate();
+  },
+  hide() { this.open = false; document.getElementById('heroSelect').classList.add('hidden'); },
+  mark() { document.querySelectorAll('#heroSelect .hero-card').forEach((c, i) => c.classList.toggle('sel', i === this.sel)); },
+  pick(i) { this.hide(); Input.endStep(); startGame(true, this.heroes[i]); },
+  animate() {                                              // os dois personagens animados nos cartões
+    if (!this.open) return;
+    const t = performance.now() / 1000;
+    const c1 = document.getElementById('heroPrev1'), c2 = document.getElementById('heroPrev2');
+    const draw = (cv, img, fr) => {
+      const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.imageSmoothingEnabled = false;
+      if (!img.complete || !fr) return;
+      const [sx, sy, w, h, ax, ay] = fr, k = Math.min(1.4, (cv.height - 10) / 150);
+      g.drawImage(img, sx, sy, w, h, cv.width / 2 - ax * k, cv.height - 6 - ay * k, w * k, h * k);
+    };
+    draw(c1, heroImg, HERO_FRAMES[Math.floor(t * 1.5) % 4 === 3 ? 'atk_raise' : 'idle']);
+    const cyc = Math.floor(t * 9) % 32;
+    draw(c2, rodImg, ROD_FRAMES[cyc < 16 ? 'idle' + (cyc % 8) : cyc < 24 ? 'punch' + (cyc - 16) : 'kick' + (cyc - 24)]);
+    requestAnimationFrame(() => this.animate());
+  },
+  setup() {
+    document.querySelectorAll('#heroSelect .hero-card').forEach((c, i) => {
+      c.addEventListener('click', () => this.pick(i));
+      c.addEventListener('pointerenter', () => { this.sel = i; this.mark(); });
+    });
+    document.getElementById('heroBack').addEventListener('click', () => this.hide());
+    addEventListener('keydown', e => {
+      if (!this.open) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (['ArrowLeft', 'KeyA', 'ArrowRight', 'KeyD'].includes(e.code)) { this.sel = 1 - this.sel; this.mark(); }
+      else if (['Enter', 'Space', 'KeyZ'].includes(e.code)) this.pick(this.sel);
+      else if (e.code === 'Escape') this.hide();
+    }, true);
+  },
+};
+
 // botão ROLAR do celular fica trancado até derrotar o Jorge
 let rollBtn, rollWasLocked = null;
 function syncTouchLocks() {
@@ -281,9 +337,11 @@ function frame(now) {
 }
 
 // ---------- menu ----------
-function startGame(fresh) {
+function startGame(fresh, hero) {
   const saved = fresh ? null : readSave();
-  G.data = saved ? Object.assign(newData(), saved) : newData();
+  G.data = saved ? Object.assign(newData(), saved) : newData(hero);
+  if (!G.data.hero) G.data.hero = 'espadachim';
+  applyHeroUI();
   if (fresh) writeSave();
   G.player = new Player();
   G.player.hp = G.data.maxHp;
@@ -295,7 +353,9 @@ function startGame(fresh) {
   document.getElementById('menu').classList.add('hidden');
   document.body.classList.remove('in-menu');
   Input.endStep();   // a tecla que confirmou o menu não deve pular/pausar no jogo
-  if (fresh) showBanner('As Catacumbas Esquecidas', 'Você desperta entre os mortos, com uma espada e nenhuma lembrança. Siga as tochas.', '#c8c0a8');
+  if (fresh) showBanner('As Catacumbas Esquecidas', isRod()
+    ? 'Rod desperta entre os mortos, de punhos cerrados e sem nenhuma lembrança. Siga as tochas.'
+    : 'Você desperta entre os mortos, com uma espada e nenhuma lembrança. Siga as tochas.', '#c8c0a8');
   if (!G.data.tutorialDone) Tutorial.start(); else Tutorial.stop(false);
 }
 
@@ -312,14 +372,14 @@ function setupMenu() {
   const select = i => { const it = items(); sel = (i + it.length) % it.length; it.forEach((b, k) => b.classList.toggle('sel', k === sel)); };
   const chooseNew = () => {
     if (readSave() && !confirm('Começar um jogo novo vai apagar o progresso salvo. Continuar?')) return;
-    startGame(true);
+    HeroSelect.show();                                       // escolhe o personagem antes de começar
   };
   cont.addEventListener('click', () => startGame(false));
   fresh.addEventListener('click', chooseNew);
   [fresh, cont, ctlBtn, keysBtn].forEach(b => b.addEventListener('pointerenter', () => select(items().indexOf(b))));
   // teclado: ↑/↓ escolhe, Enter/Espaço/Z confirma
   addEventListener('keydown', e => {
-    if (G.state !== 'title' || Controls.open || KeyBinds.open) return;
+    if (G.state !== 'title' || Controls.open || KeyBinds.open || HeroSelect.open) return;
     if (['ArrowUp', 'KeyW'].includes(e.code)) { select(sel - 1); e.preventDefault(); }
     else if (['ArrowDown', 'KeyS'].includes(e.code)) { select(sel + 1); e.preventDefault(); }
     else if (['Enter', 'Space', 'KeyZ'].includes(e.code)) { e.preventDefault(); items()[sel].click(); }
@@ -333,6 +393,7 @@ buildSprites();
 setupMenu();
 Controls.setup();
 KeyBinds.setup();
+HeroSelect.setup();
 Music.init();
 {
   const vol = document.getElementById('musicVol');

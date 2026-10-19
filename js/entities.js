@@ -7,7 +7,12 @@ const ATK = {
   down: { total: 0.30, hitFrom: 0.22, hitTo: 0.10 },   // ergue a espada e corta para baixo
   up:   { total: 0.32, hitFrom: 0.26, hitTo: 0.12 },   // golpe de baixo para cima (com pulinho)
   low:  { total: 0.22, hitFrom: 0.18, hitTo: 0.06 },   // estocada agachado
+  // Rod (sem espada): socos e chutes se alternam a cada toque
+  punch: { total: 0.27, hitFrom: 0.18, hitTo: 0.09 },
+  kick:  { total: 0.33, hitFrom: 0.22, hitTo: 0.11 },
 };
+// personagem escolhido: 'espadachim' (o herói original) ou 'rod'
+const isRod = () => !!(G.data && G.data.hero === 'rod');
 
 class Player {
   constructor() {
@@ -64,10 +69,21 @@ class Player {
     let w = 26, h = this.h + 8, y = this.y - 4;
     if (this.atkKind === 'up') { w = 24; h = this.h + 18; y = this.y - 20; }
     if (this.atkKind === 'low') { w = 28; h = 16; y = this.y + this.h - 16; }
+    if (this.atkKind === 'punch') { w = 24; h = 14; y = this.y + 3; }
+    if (this.atkKind === 'kick') { w = 28; h = 22; y = this.y - 2; }
     return { x: f > 0 ? cx - 2 : cx + 2 - w, y, w, h };
   }
 
   startAttack() {
+    if (isRod()) {                          // soco, chute, soco, chute... enquanto continuar apertando
+      this.standUp();
+      const chained = this.comboT > 0;
+      const kind = chained && this.lastHit === 'punch' ? 'kick' : 'punch';
+      this.atkKind = kind; this.atkT = ATK[kind].total; this.hitSet.clear();
+      this.chain = chained ? (this.chain || 1) + 1 : 1;       // quantos golpes seguidos
+      this.comboT = 0; this.sprintT = 0; this.lastHit = kind;
+      return;
+    }
     let kind = 'down';
     if (this.crouch) kind = 'low';
     else if (this.comboT > 0) kind = 'up';
@@ -116,7 +132,7 @@ class Player {
       this.vx = this.facing * PHYS.DASH_SPEED;
       this.vy = 0;
       if (Math.floor(this.dashT * 60) % 4 === 0)
-        { const rp = this.rollPose(); if (rp !== 'crouch') this.trail.push({ pose: rp, x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() }); }
+        { const rp = this.rollPose(); if (rp !== 'crouch' && rp !== 'dash1') this.trail.push({ pose: rp, x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.18, rot: this.rollAngle() }); }
       if (this.onGround && Math.random() < 0.5)
         G.particles.push({ x: this.x + this.w / 2, y: this.y + this.h - 1, vx: -this.facing * 30, vy: -10, life: 0.35, max: 0.35, color: '#5a5a50', size: 2, grav: 0 });
       if (this.dashT <= 0) this.vx = this.facing * PHYS.RUN;
@@ -138,7 +154,7 @@ class Player {
         this.sprintT -= dt;
         this.vx = this.facing * PHYS.SPRINT_SPEED;
         if (Math.floor(this.sprintT * 60) % 3 === 0)
-          this.trail.push({ pose: 'dash', x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.16, tint: true });
+          this.trail.push({ pose: isRod() ? 'dash4' : 'dash', x: this.x + this.w / 2, y: this.y + this.h, f: this.facing, life: 0.16, tint: true });
         if (!this.onGround) this.sprintT = 0;
       } else if (this.stun > 0) this.vx = approach(this.vx, 0, 300 * dt);
       else if (this.atkT > 0 && this.onGround) this.vx = approach(this.vx, 0, 900 * dt);   // firma os pés ao golpear
@@ -182,11 +198,12 @@ class Player {
       this.atkT -= dt;
       if (this.atkT <= 0) {
         if (this.atkKind === 'down') this.comboT = 0.35;     // janela para o golpe de baixo para cima
+        if (this.atkKind === 'punch' || this.atkKind === 'kick') this.comboT = 0.4;
         this.atkKind = null; this.atkCd = 0.05;
       } else {
         if (before === 0 && this.atkPhase() === 1) {          // começou o corte
           if (this.atkKind === 'up') { if (this.onGround) this.vy = -170; else this.vy = Math.min(this.vy, -110); }
-          else if (this.onGround) this.vx = this.facing * 70;
+          else if (this.onGround) this.vx = this.facing * (this.atkKind === 'kick' ? 90 : this.atkKind === 'punch' ? 55 : 70);
           G.shake = Math.max(G.shake, 0.05);
         }
         if (this.atkActive()) this.doAttack();
@@ -216,6 +233,7 @@ class Player {
       this.hitSet.add(e);
       e.hurt(1, this.facing);
       if (this.atkKind === 'up' && !e.isBoss && !e.isNote) e.vy = -160;
+      if (this.atkKind === 'kick' && !e.isBoss && !e.isNote && !(e instanceof Werewolf)) e.vx = this.facing * 160;   // chute empurra
       spawnParticles(e.x + e.w / 2, e.y + e.h / 2, 8, '#e8f4ff', { angle: this.atkKind === 'up' ? -Math.PI / 2 : this.facing > 0 ? 0 : Math.PI, spread: 1.4, speed: 120, life: 0.25 });
     }
     // quebrar blocos rachados
@@ -256,10 +274,12 @@ class Player {
   rollProg() { return 1 - this.dashT / PHYS.DASH_TIME; }
   rollPose() {
     const q = this.rollProg();
+    if (isRod()) return q < 0.15 ? 'dash1' : q < 0.45 ? 'dash3' : q < 0.75 ? 'dash4' : q < 0.9 ? 'dash5' : 'dash6';   // esquiva
     if (q < 0.12 || q > 0.88) return 'crouch';
     return q > 0.3 && q < 0.7 ? 'roll_tuck' : 'roll';
   }
   rollAngle() {
+    if (isRod()) return 0;
     const q = Math.min(1, Math.max(0, (this.rollProg() - 0.12) / 0.76));
     return (Math.PI + q * Math.PI * 2) * this.facing;     // o quadro 'roll' é de cabeça para baixo
   }

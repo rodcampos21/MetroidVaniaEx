@@ -29,6 +29,8 @@ const TUT_STEPS = [
   {
     title: 'Atacar',
     keys: 'Aperte [@attack1] para golpear com a espada.',
+    rodKeys: 'Aperte [@attack1] para dar um soco.',
+    rodTouch: 'Toque em {attack} para dar um soco.',
     touch: 'Toque em {attack} para golpear com a espada.',
     hint: 'attack',
     done: (p, s) => s.attacked,
@@ -36,6 +38,8 @@ const TUT_STEPS = [
   {
     title: 'Combo',
     keys: 'Aperte [@attack1] duas vezes seguidas: corte para baixo e depois para cima.',
+    rodKeys: 'Aperte [@attack1] várias vezes seguidas: soco, chute, soco, chute...',
+    rodTouch: 'Toque em {attack} várias vezes seguidas: soco, chute, soco, chute...',
     touch: 'Toque em {attack} duas vezes seguidas: corte para baixo e depois para cima.',
     hint: 'attack',
     done: (p, s) => s.combo,
@@ -84,7 +88,7 @@ const Tutorial = {
     s.walked += Math.abs(p.vx) * dt * (p.onGround ? 1 : 0);
     if (p.vy < -200 && !p.wall) s.jumped = true;
     if (p.atkKind) s.attacked = true;
-    if (p.atkKind === 'up') s.combo = true;
+    if (p.atkKind === 'up' || p.atkKind === 'kick') s.combo = true;
     if (p.sprintT > 0) s.sprinted = true;
     s.crouched = p.crouch ? s.crouched + dt : 0;
     if (this.ok > 0) {                                      // ✓ por um instante e passa para a próxima
@@ -113,7 +117,8 @@ const Tutorial = {
   draw() {
     if (!this.active() || this.wait > 0 || G.paused || G.state !== 'play') return;
     const step = TUT_STEPS[this.step];
-    const msg = ctrl(step.keys, step.touch);
+    const rod = isRod() && step.rodKeys;
+    const msg = rod ? ctrl(step.rodKeys, step.rodTouch) : ctrl(step.keys, step.touch);
     const a = Math.min(1, this.t * 4) * (this.ok > 0 ? Math.min(1, this.ok * 3) : 1);
     const W = 900, H = 90, x = CW / 2 - W / 2, y = isTouch() ? 116 : 108;   // no alto, sem cobrir o herói
     ctx.save();
@@ -201,6 +206,12 @@ const Controls = {
     el.querySelector('.ctl-keys').classList.toggle('hidden', isTouch());
     el.querySelector('.ctl-touch').classList.toggle('hidden', !isTouch());
     fillControlKeys();
+    // textos do Rod (socos/chutes e esquiva) quando ele é o personagem
+    const rod = from === 'pause' && isRod();
+    el.querySelectorAll('[data-rod]').forEach(n => {
+      if (n.dataset.orig == null) n.dataset.orig = n.textContent;
+      n.textContent = rod ? n.dataset.rod : n.dataset.orig;
+    });
     el.querySelector('#ctlSkip').classList.toggle('hidden', !(from === 'pause' && Tutorial.active()));
     el.querySelector('#ctlBack').textContent = from === 'pause' ? 'Continuar' : 'Voltar';
     el.querySelector('#ctlMenu').classList.toggle('hidden', from !== 'pause');

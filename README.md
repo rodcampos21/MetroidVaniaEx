@@ -3,6 +3,13 @@
 Metroidvania em HTML/JavaScript puro (sem bibliotecas), feito com a ajuda do Claude.
 Funciona no navegador do computador e do celular (com controles de toque).
 
+## Personagens
+
+Ao começar um **Novo Jogo**, escolha:
+
+- **O Espadachim** — espada, combo de corte para baixo e para cima, estocada agachado; conquista os poderes pelo caminho
+- **Rod** (arte do autor) — socos e chutes que se alternam a cada golpe (o chute empurra), esquiva liberada desde o início; ao vencer Jorge, a Palheta do Pecador aumenta a vida máxima dele
+
 ## Como jogar
 
 Abra o `index.html` no navegador — ou, se o GitHub Pages estiver ativado, acesse
@@ -56,6 +63,7 @@ index.html        página do jogo e controles de toque
 css/style.css     visual da página e dos botões
 js/rooms.js       MAPA: as salas desenhadas com letras (fácil de editar!)
 assets/hero.png   sprite do herói (recortado da folha de sprites)
+assets/rod.png    sprites do Rod (js/rod_sprite.js) · assets/hud_panel_rod.png retrato dele
 assets/hud_*.png  retrato com moldura e barra de vida
 assets/menu_*     arte do menu principal (fundo e faixa de seleção)
 assets/werewolf.png  lobisomem (js/werewolf_sprite.js)

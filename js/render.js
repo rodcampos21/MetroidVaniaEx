@@ -18,6 +18,7 @@ const theme = () => THEMES[G.room.def.theme];
 const HUD = { panel: new Image(), fill: new Image(), lagImg: null, lag: null,
               track: { x0: 21, x1: 142, y0: 146, y1: 155 } };
 HUD.panel.src = 'assets/hud_panel.png?v=' + ASSET_V;
+HUD.panelRod = new Image(); HUD.panelRod.src = 'assets/hud_panel_rod.png?v=' + ASSET_V;
 HUD.fill.src = 'assets/hud_fill.png?v=' + ASSET_V;
 HUD.fill.onload = () => {        // versão clara para o "dano recente"
   const c = document.createElement('canvas'); c.width = HUD.fill.width; c.height = HUD.fill.height;
@@ -373,7 +374,24 @@ function shadowAt(x, y, w) {
   ctx.beginPath(); ctx.ellipse(x, y - 1, w, 5, 0, 0, Math.PI * 2); ctx.fill();
 }
 
+// poses do Rod (socos/chutes, esquiva com dash, pulo em fases)
+function rodPose(p) {
+  if (p.wall) return 'jump4';
+  if (p.dashT > 0) return p.rollPose();
+  if (p.stun > 0) return p.stun > 0.12 ? 'hurt0' : 'hurt1';
+  if (p.atkKind) {
+    const a = ATK[p.atkKind], prog = 1 - p.atkT / a.total;
+    const seq = p.atkKind === 'kick' ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6];
+    return p.atkKind + seq[Math.min(5, Math.floor(prog * 6))];
+  }
+  if (p.crouch) return 'jump6';
+  if (p.sprintT > 0) return 'dash' + (Math.floor(G.time * 20) % 2 ? 4 : 3);
+  if (!p.onGround) return p.vy < -150 ? 'jump2' : p.vy < 90 ? 'jump3' : 'jump4';
+  if (Math.abs(p.vx) > 15) return 'walk' + (Math.floor(p.anim / 7) % 8);
+  return 'idle' + (Math.floor(G.time * 7) % 8);
+}
 function heroPose(p) {
+  if (isRod()) return rodPose(p);
   if (p.wall) return 'wall' + (Math.floor(p.climbAnim / 10) % 2);
   if (p.dashT > 0) return p.rollPose();
   if (p.stun > 0) return 'hurt';
@@ -390,6 +408,7 @@ function heroPose(p) {
   return 'idle';
 }
 function drawHero(pose, cx, fy, facing, rot = 0, alpha = 1, bob = 0) {
+  if (isRod()) return drawRod(pose, cx, fy, facing, alpha);
   const [sx, sy, w, h, ax, ay] = HERO_FRAMES[pose];
   ctx.save();
   ctx.globalAlpha *= alpha;
@@ -422,13 +441,38 @@ function drawSlashArc(cx, cy, f, a0, a1, prog, r) {
   ctx.beginPath(); ctx.arc(0, 0, r, A(Math.abs(a - from) > 40 ? (ccw ? a + 40 : a - 40) : from), A(a), ccw); ctx.stroke();
   ctx.restore();
 }
+function drawRod(pose, cx, fy, facing, alpha = 1, rot = 0) {
+  const f = ROD_FRAMES[pose];
+  if (!f || !rodImg.complete) return;
+  const [sx, sy, w, h, ax, ay] = f;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(Math.round(cx), Math.round(fy));
+  if (facing < 0) ctx.scale(-1, 1);
+  if (rot) ctx.rotate(rot);
+  ctx.drawImage(rodImg, sx, sy, w, h, -Math.round(ax), -Math.round(ay), w, h);
+  ctx.restore();
+}
 function drawPlayer() {
   const p = G.player;
+  // Rod: animação de queda quando morre
+  if (G.state === 'dead' && isRod()) {
+    const el = 2.4 - G.deadT, i = Math.min(7, 1 + Math.floor(el / 0.14));
+    const cx = (p.x + p.w / 2) * AP, fy = Math.round((p.y + p.h) * AP);
+    shadowAt(cx - p.facing * 20, fy, 34);
+    drawRod('hurt' + i, cx, fy, p.facing, Math.min(1, G.deadT / 0.6));
+    return;
+  }
   if (G.state === 'dead' || !heroImg.complete) return;
   const cx = (p.x + p.w / 2) * AP, fy = Math.round((p.y + p.h) * AP);
   for (const gh of p.trail) drawHero(gh.pose, gh.x * AP, gh.y * AP, gh.f, gh.rot || 0, gh.life * (gh.tint ? 2.2 : 2));
   const pose = heroPose(p);
   const alpha = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0 ? 0.35 : 1;
+  if (p.wall && isRod()) {                                 // Rod agarrado: encosta na parede
+    const wx = p.wall < 0 ? p.x * AP + 14 : (p.x + p.w) * AP - 14;
+    drawRod('jump4', wx, Math.round((p.y + p.h) * AP), p.wall, alpha, p.wall * -0.15);
+    return;
+  }
   if (p.wall) {
     // encostado na parede: o lado da mão encosta na parede
     const wx = p.wall < 0 ? p.x * AP - 6 : (p.x + p.w) * AP + 6;
@@ -442,6 +486,16 @@ function drawPlayer() {
   if (p.atkKind && p.atkPhase() >= 1) {
     const a = ATK[p.atkKind], prog = 1 - (p.atkT - (a.hitTo - 0.06)) / (a.hitFrom - a.hitTo + 0.06);
     const cy = (p.y + p.h / 2) * AP;
+    if (p.atkKind === 'punch' || p.atkKind === 'kick') {   // impacto do soco/chute
+      const b = p.attackBox(), ix = (p.facing > 0 ? b.x + b.w : b.x) * AP, iy = (b.y + b.h * (p.atkKind === 'kick' ? 0.3 : 0.5)) * AP;
+      const k = Math.max(0, 1 - Math.abs(prog - 0.4) * 2.2);
+      if (k > 0) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createRadialGradient(ix, iy, 0, ix, iy, 26);
+        g.addColorStop(0, `rgba(255,245,220,${0.85 * k})`); g.addColorStop(1, 'rgba(255,170,90,0)');
+        ctx.fillStyle = g; ctx.fillRect(ix - 26, iy - 26, 52, 52); ctx.restore();
+      }
+    }
     if (p.atkKind === 'down') drawSlashArc(cx + p.facing * 12, cy + 2, p.facing, -110, 35, Math.max(0, prog), 62);
     else if (p.atkKind === 'up') drawSlashArc(cx + p.facing * 10, cy - 6, p.facing, 55, -115, Math.max(0, prog), 66);
   }
@@ -461,7 +515,8 @@ function drawHUD() {
   // ---- retrato com barra de vida (arte do autor: assets/hud_panel.png) ----
   const PX = 14, PY = 12;
   const T = HUD.track;                                   // trilha da barra dentro do painel
-  if (HUD.panel.complete) ctx.drawImage(HUD.panel, PX, PY);
+  const panelImg = isRod() ? HUD.panelRod : HUD.panel;
+  if (panelImg.complete) ctx.drawImage(panelImg, PX, PY);
   // levou dano: o retrato pisca em vermelho
   if (p.stun > 0 || p.inv > 0.85) {
     ctx.fillStyle = `rgba(200,20,20,${0.35 * Math.min(1, (p.inv - 0.6) * 2.5)})`;
@@ -489,7 +544,7 @@ function drawHUD() {
   }
   // habilidades (abaixo do retrato)
   let ix = PX + 4, iy = PY + 168;
-  for (const [has, spr] of [[d.abilities.doubleJump, SPR.relicD], [d.abilities.dash, SPR.relicH], [d.abilities.climb, SPR.relicG]]) {
+  for (const [has, spr] of [[d.abilities.doubleJump, SPR.relicD], [d.abilities.dash && !isRod(), SPR.relicH], [d.abilities.climb, SPR.relicG]]) {
     if (!has) continue;
     frameBox(ix, iy, 30, 30, 0.85);
     ctx.drawImage(spr, ix + 6, iy + 3, 18, 23);

@@ -29,6 +29,29 @@
     </div>
   </div>
 
+  <!-- Escolha do personagem (Novo Jogo) -->
+  <div id="heroSelect" class="hidden">
+    <div class="hs-box">
+      <h2>Escolha seu personagem</h2>
+      <div class="hs-cards">
+        <button class="hero-card sel">
+          <canvas id="heroPrev1" width="220" height="200"></canvas>
+          <b>O Espadachim</b>
+          <span>Espada · combo de corte para baixo e para cima · estocada agachado</span>
+          <i>Conquista os poderes pelo caminho</i>
+        </button>
+        <button class="hero-card">
+          <canvas id="heroPrev2" width="220" height="200"></canvas>
+          <b>Rod</b>
+          <span>Socos e chutes que se alternam a cada golpe · chute empurra o inimigo</span>
+          <i>Já começa com a esquiva liberada</i>
+        </button>
+      </div>
+      <p class="hs-help">← → escolhe · Enter confirma · Esc volta</p>
+      <div class="ctl-btns"><button id="heroBack">Voltar</button></div>
+    </div>
+  </div>
+
   <!-- Tela de controles (menu e pausa) -->
   <div id="controls" class="hidden">
     <div class="ctl-box">
@@ -37,11 +60,11 @@
       <div class="ctl-keys">
         <div class="row"><span class="keys" data-keys="left,right"></span><b>Mover</b></div>
         <div class="row"><span class="keys" data-keys="jump"></span><b>Pular</b><i>segure para pular mais alto</i></div>
-        <div class="row"><span class="keys" data-keys="attack"></span><b>Atacar</b><i>2× seguidas = combo (baixo + cima)</i></div>
+        <div class="row"><span class="keys" data-keys="attack"></span><b>Atacar</b><i data-rod="várias seguidas = soco, chute, soco, chute...">2× seguidas = combo (baixo + cima)</i></div>
         <div class="row"><span class="keys" data-keys="down"></span><b>Agachar</b><i>atacar agachado = estocada · agachar + pular desce da plataforma</i></div>
         <div class="row"><span class="keys" data-keys="sprint"></span><b>Dash</b><i>arrancada rápida pelo chão</i></div>
         <div class="row" data-need="doubleJump"><span class="keys" data-keys="jump"></span><b>Pulo duplo</b><i>no ar · após o Salto Etéreo</i></div>
-        <div class="row" data-need="dash"><span class="keys" data-keys="dash"></span><b>Rolar</b><i>invulnerável durante o rolamento · ao derrotar Jorge O Pecador</i></div>
+        <div class="row" data-need="dash"><span class="keys" data-keys="dash"></span><b data-rod="Esquiva">Rolar</b><i data-rod="invulnerável durante a esquiva · Rod já começa com ela">invulnerável durante o rolamento · ao derrotar Jorge O Pecador</i></div>
         <div class="row" data-need="climb"><span class="keys" data-keys="left,right"></span><b>Escalar</b><i>pule numa parede segurando a direção · cima/baixo sobe e desce · pular = salto de parede · após as Garras</i></div>
         <div class="row"><span class="keys" data-keys="pause"></span><b>Pausar</b></div>
       </div>
@@ -59,9 +82,9 @@
           </div>
         </div>
         <div class="row"><span class="keys"><span class="mini jump s">▲</span></span><b>Pular</b><i>segure para mais alto · no ar = pulo duplo (após o Salto Etéreo)</i></div>
-        <div class="row"><span class="keys"><span class="mini atk s">⚔</span></span><b>Atacar</b><i>2× seguidas = combo · agachado = estocada</i></div>
+        <div class="row"><span class="keys"><span class="mini atk s">⚔</span></span><b>Atacar</b><i data-rod="várias seguidas = soco, chute, soco...">2× seguidas = combo · agachado = estocada</i></div>
         <div class="row"><span class="keys"><span class="mini sprint s">D</span></span><b>Dash</b><i>arrancada rápida pelo chão</i></div>
-        <div class="row" data-need="dash"><span class="keys"><span class="mini dash s">R</span></span><b>Rolar</b><i>invulnerável · ao derrotar Jorge O Pecador</i></div>
+        <div class="row" data-need="dash"><span class="keys"><span class="mini dash s">R</span></span><b data-rod="Esquiva">Rolar</b><i data-rod="invulnerável · Rod já começa com ela">invulnerável · ao derrotar Jorge O Pecador</i></div>
         <div class="row" data-need="climb"><span class="keys"><span class="mini dpad s">✥</span></span><b>Escalar</b><i>pule na parede segurando a direção dela · após as Garras</i></div>
         <div class="row"><span class="keys"><span class="mini pause s">II</span></span><b>Pausar</b><i>botão no alto da tela</i></div>
         <p class="tip">Jogue com o celular deitado.</p>
@@ -111,7 +134,7 @@
        aparece na hora, sem o navegador usar arquivos antigos. -->
   <script>
     (function () {
-      const FILES = ['js/rooms.js', 'js/themes.js', 'js/input.js', 'js/engine.js', 'js/audio.js', 'js/pixel.js', 'js/hero.js', 'js/werewolf_sprite.js', 'js/guitarist_sprite.js', 'js/sprites.js', 'js/world.js', 'js/entities.js', 'js/boss.js', 'js/tutorial.js', 'js/keybinds.js', 'js/render.js', 'js/main.js'];
+      const FILES = ['js/rooms.js', 'js/themes.js', 'js/input.js', 'js/engine.js', 'js/audio.js', 'js/pixel.js', 'js/hero.js', 'js/rod_sprite.js', 'js/werewolf_sprite.js', 'js/guitarist_sprite.js', 'js/sprites.js', 'js/world.js', 'js/entities.js', 'js/boss.js', 'js/tutorial.js', 'js/keybinds.js', 'js/render.js', 'js/main.js'];
       const go = v => {
         const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'css/style.css?v=' + v;
         css.onload = css.onerror = () => { document.body.style.opacity = 1; };
